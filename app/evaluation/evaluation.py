@@ -123,6 +123,7 @@ async def get_all_submissions(async_session: async_sessionmaker[AsyncSession], c
 
     async with async_session as session:
         submissions = await session.execute(select(Submission).filter_by(challenge=challenge))
+        sorting = (await session.execute(select(Challenge).filter_by(title=challenge))).scalars().one().sorting
 
     for submission in submissions.scalars().all():
         result.append({
@@ -134,6 +135,7 @@ async def get_all_submissions(async_session: async_sessionmaker[AsyncSession], c
             "timestamp": submission.timestamp,
         })
         
+    result = sorted(result, key=lambda d: d['test_result'], reverse=(sorting == "descending"))
     return result
 
 
@@ -159,6 +161,7 @@ async def get_leaderboard(async_session: async_sessionmaker[AsyncSession], chall
 
     async with async_session as session:
         submissions = await session.execute(select(Submission).filter_by(challenge=challenge))
+        sorting = (await session.execute(select(Challenge).filter_by(title=challenge))).scalars().one().sorting
 
     submissions = submissions.scalars().all()
     submitters = list(set([submission.submitter for submission in submissions]))
@@ -176,6 +179,7 @@ async def get_leaderboard(async_session: async_sessionmaker[AsyncSession], chall
             "timestamp": best_result.timestamp,
         })
 
+    result = sorted(result, key=lambda d: d['test_result'], reverse=(sorting == "descending"))
     return result
 
 async def submit_test(username: str, description: str, challenge: Challenge, sub_file_path: str):
