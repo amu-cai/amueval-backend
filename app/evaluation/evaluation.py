@@ -36,6 +36,10 @@ async def submit(async_session: async_sessionmaker[AsyncSession], username: str,
     async with async_session as session:
         challenge = (await session.execute(select(Challenge).filter_by(title=challenge_title))).scalars().one()
 
+    if challenge.deadline != "":
+        if datetime.strptime(challenge.deadline, "%d-%m-%Y, %H:%M:%S") < datetime.now():
+            raise HTTPException(status_code=422, detail='Deadline for submissions to the challenge has passed')
+
     metric = challenge.main_metric
     parameters = challenge.main_metric_parameters
 
