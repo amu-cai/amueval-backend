@@ -137,3 +137,13 @@ async def get_user_rights_info(async_session: async_sessionmaker[AsyncSession], 
         'isAdmin': user.is_admin,
         'isAuthor': user.is_author
     }
+
+async def get_profile_info(async_session: async_sessionmaker[AsyncSession], username: str):
+    async with async_session as session:
+        user = (await session.execute(select(User).filter_by(username=username))).scalars().one()
+    return {
+        'username': user.username,
+        'email': user.email,
+        'isAdmin': user.is_admin,
+        'isAuthor': user.is_author
+    }
