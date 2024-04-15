@@ -61,6 +61,11 @@ async def get_user_rights_info(db: db_dependency, user: user_dependency):
     await auth.check_user_exists(async_session=db, username=user["username"])
     return await auth.get_user_rights_info(async_session=db, username=user["username"])
 
+@auth_router.get("/profile-info")
+async def get_profile_info(db: db_dependency, user: user_dependency):
+    await auth.check_user_exists(async_session=db, username=user['username'])
+    return await auth.get_profile_info(async_session=db, username=user['username'])
+
 challenges_router = APIRouter(
     prefix="/challenges",
     tags=['challenges']
