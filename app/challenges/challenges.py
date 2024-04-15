@@ -10,8 +10,9 @@ from sqlalchemy import (
     select,
 )
 from global_helper import check_challenge_exists, save_zip_file, check_file_extension
-import os
 from evaluation.evaluation import submit_test
+import shutil
+import os
 
 STORE_ENV = os.getenv("STORE_PATH")
 if STORE_ENV is not None:
@@ -53,10 +54,15 @@ async def create_challenge(async_session: async_sessionmaker[AsyncSession],
         deleted = False
     )
 
-    await submit_test(username=username,
-                      description=challenge_input_model.description,
-                      challenge=create_challenge_model,
-                      sub_file_path=temp_zip_path)
+    try:
+        await submit_test(username=username,
+                        description=challenge_input_model.description,
+                        challenge=create_challenge_model,
+                        sub_file_path=temp_zip_path)
+    except Exception as err:
+        shutil.rmtree(f"{challenges_dir}/{challenge_folder_name}")
+        raise HTTPException(status_code=422, detail=f'Test submission error {err}')
+
 
     async with async_session as session:
         session.add(create_challenge_model)
