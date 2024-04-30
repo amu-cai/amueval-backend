@@ -4,3 +4,4 @@ configure.json
 app/*/challenges/*
 app/*/temp/*
 .env
+.idea/
