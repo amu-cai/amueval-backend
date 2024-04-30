@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import UploadFile, File
 from challenges.models import ChallengeInputModel
 from admin.models import UserRightsModel
-from auth.models import CreateUserRequest, Token
+from auth.models import CreateUserRequest, Token, EditUserRequest
 import auth.auth as auth
 import challenges.challenges as challenges
 import evaluation.evaluation as evaluation
@@ -65,6 +65,11 @@ async def get_user_rights_info(db: db_dependency, user: user_dependency):
 async def get_profile_info(db: db_dependency, user: user_dependency):
     await auth.check_user_exists(async_session=db, username=user['username'])
     return await auth.get_profile_info(async_session=db, username=user['username'])
+
+@auth_router.put("/profile/edit")
+async def edit_user(db: db_dependency, user: user_dependency, edit_user_request: EditUserRequest):
+    await auth.check_user_exists(async_session=db, username=user['username'])
+    return await auth.edit_user(async_session=db, username=user['username'], edit_user_request=edit_user_request)
 
 challenges_router = APIRouter(
     prefix="/challenges",
