@@ -1,12 +1,12 @@
 from datetime import timedelta, datetime
-from typing import Annotated
+from typing import Annotated, cast
 from fastapi import Depends, HTTPException
 from starlette import status
 from database.models import User
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
-from auth.models import CreateUserRequest
+from auth.models import CreateUserRequest, EditUserRequest
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
@@ -147,3 +147,16 @@ async def get_profile_info(async_session: async_sessionmaker[AsyncSession], user
         'isAdmin': user.is_admin,
         'isAuthor': user.is_author
     }
+
+
+async def edit_user(async_session: async_sessionmaker[AsyncSession], username: str, edit_user_request: EditUserRequest):
+    async with async_session as session:
+        user = (await session.execute(select(User).filter_by(username=username))).scalars().one()
+        if not user:
+            raise HTTPException(status_code=404, detail=f'User with username {username} not found!')
+
+        user.email = edit_user_request.email
+
+        await session.commit()
+
+    return {'message': f"User with username {username} updated!"}
