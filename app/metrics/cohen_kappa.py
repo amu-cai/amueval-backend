@@ -31,20 +31,20 @@ class CohenKappa(MetricBase):
                 {
                     "name": "labels",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "weights",
                     "data_type": "str | None",
                     "default_value": "None",
-                    "values": "linear, quadratic"
+                    "values": "linear, quadratic",
                 },
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
-                }
-            ]
+                    "default_value": "None",
+                },
+            ],
         }
 
     def calculate(
@@ -75,4 +75,7 @@ class CohenKappa(MetricBase):
                 sample_weight=self.sample_weight,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

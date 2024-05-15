@@ -28,15 +28,15 @@ class D2AbsoluteError(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "multioutput",
                     "data_type": "str | list[Any]",
                     "default_value": "uniform_average",
-                    "values": "raw_values, uniform_average"
-                }
-            ]
+                    "values": "raw_values, uniform_average",
+                },
+            ],
         }
 
     def calculate(

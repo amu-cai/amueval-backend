@@ -32,6 +32,7 @@ from metrics.d2_pinball import D2Pinball
 from metrics.d2_absolute_error import D2AbsoluteError
 from metrics.bleu import Bleu
 
+
 class Metrics(BaseModel):
     """All available metrics."""
 
@@ -72,7 +73,9 @@ def all_metrics() -> list[str]:
 def metric_info(metric_name: str) -> dict:
     """Get information about a metric."""
     if metric_name not in all_metrics():
-        raise HTTPException(status_code=422, detail=f"Metric {metric_name} is not defined")
+        raise HTTPException(
+            status_code=422, detail=f"Metric {metric_name} is not defined"
+        )
     else:
         metric = getattr(Metrics(), metric_name)
         return metric().info()
@@ -85,7 +88,9 @@ def calculate_default_metric(
 ) -> Any:
     """Use given metric with default settings."""
     if metric_name not in all_metrics():
-        raise HTTPException(status_code=422, detail=f"Metric {metric_name} is not defined")
+        raise HTTPException(
+            status_code=422, detail=f"Metric {metric_name} is not defined"
+        )
     else:
         metric = getattr(Metrics(), metric_name)
         return metric().calculate(expected, out)
@@ -102,14 +107,15 @@ def calculate_metric(
         print("raise")
         print(metric_name)
         print(all_metrics())
-        raise HTTPException(status_code=422, detail=f"Metric {metric_name} is not defined")
+        raise HTTPException(
+            status_code=422, detail=f"Metric {metric_name} is not defined"
+        )
     else:
         metric = getattr(Metrics(), metric_name)
         metric_params = metric.model_fields.keys()
 
         print("metric_params")
         print(set(metric_params))
-
 
         print("params keys")
         print(set(params.keys()))

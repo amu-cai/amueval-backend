@@ -31,45 +31,41 @@ class FBeta(MetricBase):
     pos_label: int | float | bool | str = 1
     average: str | None = "binary"
     sample_weight: list[Any] | None = None
-    zero_division: str | float = 'warn'
+    zero_division: str | float = "warn"
 
     def info(self) -> dict:
         return {
             "name": "f-beta score",
             "link": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.fbeta_score.html#sklearn.metrics.fbeta_score",
             "parameters": [
-                {
-                    "name": "beta",
-                    "data_type": "float",
-                    "default_value": "1.0"
-                },
+                {"name": "beta", "data_type": "float", "default_value": "1.0"},
                 {
                     "name": "labels",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "pos_label",
                     "data_type": "int | float | bool | str",
-                    "default_value": "1"
+                    "default_value": "1",
                 },
                 {
                     "name": "average",
                     "data_type": "str | None",
                     "default_value": "binary",
-                    "possible_values": "micro, macro, samples, weighted, binary"
+                    "possible_values": "micro, macro, samples, weighted, binary",
                 },
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "zero_division",
                     "data_type": "str | float | np.NaN",
-                    "default_value": "warn"
-                }
-            ]
+                    "default_value": "warn",
+                },
+            ],
         }
 
     def calculate(
@@ -103,4 +99,7 @@ class FBeta(MetricBase):
                 zero_division=self.zero_division,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

@@ -26,17 +26,13 @@ class BalancedAccuracy(MetricBase):
             "name": "balanced accuracy",
             "link": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html#sklearn.metrics.balanced_accuracy_score",
             "parameters": [
-                {
-                    "name": "adjusted",
-                    "data_type": "bool",
-                    "default_value": "False"
-                },
+                {"name": "adjusted", "data_type": "bool", "default_value": "False"},
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
-                }
-            ]
+                    "default_value": "None",
+                },
+            ],
         }
 
     def calculate(
@@ -66,4 +62,7 @@ class BalancedAccuracy(MetricBase):
                 sample_weight=self.sample_weight,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

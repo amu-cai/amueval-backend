@@ -31,27 +31,23 @@ class AveragePrecision(MetricBase):
                 {
                     "name": "pos_label",
                     "data_type": "int | float | bool | str",
-                    "default_value": "1"
+                    "default_value": "1",
                 },
                 {
                     "name": "average",
                     "data_type": "str | None",
                     "default_value": "macro",
-                    "possible_values": "micro, macro, samples, weighted"
+                    "possible_values": "micro, macro, samples, weighted",
                 },
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
-                }
-            ]
+                    "default_value": "None",
+                },
+            ],
         }
 
-    def calculate(
-        self,
-        expected: list[Any],
-        out: list[Any]
-    ) -> float:
+    def calculate(self, expected: list[Any], out: list[Any]) -> float:
         """
         Metric calculation
 
@@ -75,4 +71,7 @@ class AveragePrecision(MetricBase):
                 sample_weight=self.sample_weight,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

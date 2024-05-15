@@ -24,9 +24,9 @@ class MeanPoissonDeviance(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 }
-            ]
+            ],
         }
 
     def calculate(

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class SubmitInputModel(BaseModel):
     challenge_title: str
     submitter: str

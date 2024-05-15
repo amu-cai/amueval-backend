@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class UserSettingsModel(BaseModel):
     title: str
     description: str | None = None
@@ -8,6 +9,7 @@ class UserSettingsModel(BaseModel):
     deadline: str | None = None
     award: str | None = None
     challenge_source: str
+
 
 class UserRightsModel(BaseModel):
     username: str

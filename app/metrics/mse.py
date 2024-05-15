@@ -28,15 +28,15 @@ class MSE(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "multioutput",
                     "data_type": "str | list[Any]",
                     "default_value": "uniform_average",
-                    "possible_values": "raw_values, uniform_average"
-                }
-            ]
+                    "possible_values": "raw_values, uniform_average",
+                },
+            ],
         }
 
     def calculate(
@@ -66,4 +66,7 @@ class MSE(MetricBase):
                 multioutput=self.multioutput,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

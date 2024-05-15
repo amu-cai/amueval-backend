@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class ChallengeInputModel(BaseModel):
     title: str
     description: str | None = None

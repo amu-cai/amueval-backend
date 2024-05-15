@@ -32,20 +32,16 @@ class MeanPinballLoss(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
-                {
-                    "name": "alpha",
-                    "data_type": "float",
-                    "default_value": "0.5"
-                },
+                {"name": "alpha", "data_type": "float", "default_value": "0.5"},
                 {
                     "name": "multioutput",
                     "data_type": "str | list[Any]",
                     "default_value": "uniform_average",
-                    "values": "raw_values, uniform_average"
-                }
-            ]
+                    "values": "raw_values, uniform_average",
+                },
+            ],
         }
 
     def calculate(

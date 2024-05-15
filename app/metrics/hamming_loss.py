@@ -24,9 +24,9 @@ class HammingLoss(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 }
-            ]
+            ],
         }
 
     def calculate(
@@ -55,4 +55,7 @@ class HammingLoss(MetricBase):
                 sample_weight=self.sample_weight,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )
