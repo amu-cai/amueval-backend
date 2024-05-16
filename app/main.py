@@ -122,7 +122,8 @@ async def create_challenge1(
     if challenge_title == "":
         raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
 
-    if check_challenge_exists(db, challenge_title):
+    challenge_exists = await check_challenge_exists(db, challenge_title)
+    if challenge_exists:
         raise HTTPException(
             status_code=422,
             detail=f"Challenge title <{challenge_title}> already exists",
@@ -130,9 +131,6 @@ async def create_challenge1(
 
     # TODO check challenge_file extension
 
-    # links
-    # https://git.wmi.amu.edu.pl/ryssta/fce-test
-    # https://git.wmi.amu.edu.pl/ryssta/fce-test/raw/branch/master/README.md
     save_expected_file(challenge_file, challenge_title)
 
     challenge_input_model: ChallengeInputModel = ChallengeInputModel(
