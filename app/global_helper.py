@@ -48,7 +48,9 @@ async def check_challenge_exists(
 
 
 async def get_readme_content(url: str) -> str:
-    full_url = url + "/raw/branch/master/README.md"
+    # https://github.com/szymonbartanowicz/jakwywioze-frontend/raw/branch/master/README.md
+    # full_url = url + "/raw/branch/master/README.md"
+    full_url = "https://git.wmi.amu.edu.pl/ryssta/fce-test/raw/branch/master/README.md"
     readme = urllib.request.urlopen(full_url)
     readme_content = readme.read().decode("utf-8")
 

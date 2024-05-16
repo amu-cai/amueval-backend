@@ -65,6 +65,6 @@ async def post_create_challenge(
 
     return {
         "success": True,
-        "challenge": challenge_input_model.challenge_title,
+        "challenge": challenge_input_model.title,
         "message": "Challenge uploaded successfully",
     }
