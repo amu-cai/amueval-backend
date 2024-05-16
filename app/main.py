@@ -18,7 +18,7 @@ from global_helper import (
     save_expected_file,
     get_readme_content
 )
-from database.challenges import create_challenge1
+from database.challenges import post_create_challenge
 
 engine = get_engine()
 session = get_session(engine)
@@ -149,7 +149,7 @@ async def create_challenge1(
 
     readme_content = get_readme_content(challenge_source)
 
-    return await create_challenge1(
+    return await post_create_challenge(
         async_session=db,
         username=user["username"],
         challenge_file=challenge_file,

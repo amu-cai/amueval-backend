@@ -22,7 +22,7 @@ else:
 challenges_dir = f"{STORE}/challenges"
 
 
-async def create_challenge1(
+async def post_create_challenge(
     async_session: async_sessionmaker[AsyncSession],
     username: str,
     challenge_input_model: ChallengeInputModel,
