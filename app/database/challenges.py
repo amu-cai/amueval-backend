@@ -31,7 +31,7 @@ async def post_create_challenge(
 ):
     create_challenge_model = Challenge(
         author=username,
-        title=challenge_input_model.challenge_title,
+        title=challenge_input_model.title,
         type=challenge_input_model.type,
         source=challenge_input_model.challenge_source,
         description=challenge_input_model.description,

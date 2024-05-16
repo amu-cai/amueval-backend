@@ -131,7 +131,7 @@ async def create_challenge1(
 
     # TODO check challenge_file extension
 
-    save_expected_file(challenge_file, challenge_title)
+    await save_expected_file(challenge_file, challenge_title)
 
     challenge_input_model: ChallengeInputModel = ChallengeInputModel(
         title=challenge_title,
@@ -145,7 +145,7 @@ async def create_challenge1(
         sorting=sorting,
     )
 
-    readme_content = get_readme_content(challenge_source)
+    readme_content = await get_readme_content(challenge_source)
 
     return await post_create_challenge(
         async_session=db,
