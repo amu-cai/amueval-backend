@@ -27,7 +27,6 @@ async def post_create_challenge(
     username: str,
     challenge_input_model: ChallengeInputModel,
     challenge_file: UploadFile = File(...),
-    readme_content: str = "",
 ):
     create_challenge_model = Challenge(
         author=username,
@@ -41,7 +40,7 @@ async def post_create_challenge(
         deadline=challenge_input_model.deadline,
         award=challenge_input_model.award,
         sorting=challenge_input_model.sorting,
-        readme=readme_content,
+        readme="",
         deleted=False,
     )
 

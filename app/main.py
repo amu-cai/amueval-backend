@@ -145,14 +145,11 @@ async def create_challenge1(
         sorting=sorting,
     )
 
-    readme_content = await get_readme_content(challenge_source)
-
     return await post_create_challenge(
         async_session=db,
         username=user["username"],
         challenge_file=challenge_file,
         challenge_input_model=challenge_input_model,
-        readme_content=readme_content
     )
 
 
