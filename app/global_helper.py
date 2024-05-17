@@ -47,16 +47,6 @@ async def check_challenge_exists(
     return challenge_exists
 
 
-async def get_readme_content(url: str) -> str:
-    # https://github.com/szymonbartanowicz/jakwywioze-frontend/raw/branch/master/README.md
-    # full_url = url + "/raw/branch/master/README.md"
-    full_url = "https://git.wmi.amu.edu.pl/ryssta/fce-test/raw/branch/master/README.md"
-    readme = urllib.request.urlopen(full_url)
-    readme_content = readme.read().decode("utf-8")
-
-    return readme_content
-
-
 async def save_expected_file(file: UploadFile, file_name: str) -> str:
     file_full_name = f"{file_name}.tsv"
     file_path = f"{challenges_dir}/{file_full_name}"

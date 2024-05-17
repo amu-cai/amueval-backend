@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from global_helper import (
     check_challenge_exists,
     save_expected_file,
-    get_readme_content
 )
 from database.challenges import post_create_challenge
 
@@ -129,7 +129,12 @@ async def create_challenge1(
             detail=f"Challenge title <{challenge_title}> already exists",
         )
 
-    # TODO check challenge_file extension
+    proper_file_extension = ".tsv" == Path(challenge_file.filename).suffix
+    if not proper_file_extension:
+        raise HTTPException(
+            status_code=422,
+            detail=f"File <{challenge_file.filename}> is not a TSV file"
+        )
 
     await save_expected_file(challenge_file, challenge_title)
 
