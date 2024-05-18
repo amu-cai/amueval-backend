@@ -30,19 +30,19 @@ class Bleu(MetricBase):
                 {
                     "name": "weights",
                     "data_type": "tuple[float] | list[tuple[float]]",
-                    "default_value": "(0.25, 0.25, 0.25, 0.25)"
+                    "default_value": "(0.25, 0.25, 0.25, 0.25)",
                 },
                 {
                     "name": "smoothing_function",
                     "data_type": "Callable",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "auto_reweigh",
                     "data_type": "bool",
                     "default_value": "False",
-                }
-            ]
+                },
+            ],
         }
 
     def calculate(

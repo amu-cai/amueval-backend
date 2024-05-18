@@ -19,40 +19,70 @@ if STORE_ENV is not None:
 else:
     raise FileNotFoundError("STORE_PATH env variable not defined")
 
-SAVE_SEPARATOR = '_~~~_'
+SAVE_SEPARATOR = "_~~~_"
 challenges_dir = f"{STORE}/challenges"
 deleted_challenges_dir = f"{STORE}/deleted_challenges"
+
 
 async def get_users_settings(async_session):
     async with async_session as session:
         users = (await session.execute(select(User))).scalars().all()
     result = []
     for user in users:
-        result.append({
-            "username": user.username,
-            "email": user.email,
-            "is_admin": user.is_admin,
-            "is_author": user.is_author,
-        })
+        result.append(
+            {
+                "username": user.username,
+                "email": user.email,
+                "is_admin": user.is_admin,
+                "is_author": user.is_author,
+            }
+        )
     return result
 
-async def user_rights_update(async_session: async_sessionmaker[AsyncSession], user_rights: UserRightsModel):
+
+async def user_rights_update(
+    async_session: async_sessionmaker[AsyncSession], user_rights: UserRightsModel
+):
     is_admin = user_rights.is_admin
     is_author = user_rights.is_author
     user_to_update = user_rights.username
     async with async_session as session:
-        user = (await session.execute(select(User).filter_by(username=user_to_update))).scalars().one()
+        user = (
+            (await session.execute(select(User).filter_by(username=user_to_update)))
+            .scalars()
+            .one()
+        )
         user.is_admin = is_admin
         user.is_author = is_author
         await session.commit()
-    return {"success": True, "user": user_to_update, "message": "User rights uploaded successfully"}
+    return {
+        "success": True,
+        "user": user_to_update,
+        "message": "User rights uploaded successfully",
+    }
 
-async def delete_challenge(async_session: async_sessionmaker[AsyncSession], challenge_title: str):
+
+async def delete_challenge(
+    async_session: async_sessionmaker[AsyncSession], challenge_title: str
+):
     async with async_session as session:
-        challenge = (await session.execute(select(Challenge).filter_by(title=challenge_title))).scalars().one()
-        new_challenge_title = f"{challenge.title}{SAVE_SEPARATOR}{token_hex(5)}{SAVE_SEPARATOR}DELETED"
-        shutil.move(f"{challenges_dir}/{challenge_title}", f"{deleted_challenges_dir}/{new_challenge_title}")
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=challenge_title)))
+            .scalars()
+            .one()
+        )
+        new_challenge_title = (
+            f"{challenge.title}{SAVE_SEPARATOR}{token_hex(5)}{SAVE_SEPARATOR}DELETED"
+        )
+        shutil.move(
+            f"{challenges_dir}/{challenge_title}",
+            f"{deleted_challenges_dir}/{new_challenge_title}",
+        )
         challenge.title = new_challenge_title
         challenge.deleted = True
         await session.commit()
-    return {"success": True, "challenge": challenge_title, "message": "Challenge deleted"}
+    return {
+        "success": True,
+        "challenge": challenge_title,
+        "message": "Challenge deleted",
+    }

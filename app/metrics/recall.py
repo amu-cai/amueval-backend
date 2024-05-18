@@ -26,9 +26,9 @@ class Recall(MetricBase):
 
     labels: list[Any] | None = None
     pos_label: int | float | bool | str = 1
-    average: str | None = 'bianry'
+    average: str | None = "bianry"
     sample_weight: list[Any] | None = None
-    zero_division: str | float = 'warn'
+    zero_division: str | float = "warn"
 
     def info(self) -> dict:
         return {
@@ -38,30 +38,30 @@ class Recall(MetricBase):
                 {
                     "name": "labels",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "pos_label",
                     "data_type": "int | float | bool | str",
-                    "default_value": "1"
+                    "default_value": "1",
                 },
                 {
                     "name": "average",
                     "data_type": "str | None",
                     "default_value": "binary",
-                    "possible_values": "micro, macro, samples, weighted, binary"
+                    "possible_values": "micro, macro, samples, weighted, binary",
                 },
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "zero_division",
                     "data_type": "str | float | np.NaN",
-                    "default_value": "warn"
-                }
-            ]
+                    "default_value": "warn",
+                },
+            ],
         }
 
     def calculate(
@@ -94,4 +94,7 @@ class Recall(MetricBase):
                 zero_division=self.zero_division,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

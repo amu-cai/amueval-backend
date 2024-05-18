@@ -41,12 +41,14 @@ DB_CONNECTION_URL = "postgresql+asyncpg://{}:{}@{}:{}/{}".format(
     DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
 )
 
+
 def get_engine() -> AsyncEngine:
     engine = create_async_engine(
         DB_CONNECTION_URL,
         echo=True,
     )
     return engine
+
 
 def get_session(engine: AsyncEngine) -> AsyncSession:
     async_session = async_sessionmaker(engine, expire_on_commit=True)

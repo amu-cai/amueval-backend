@@ -29,14 +29,10 @@ class D2Tweedie(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
-                {
-                    "name": "power",
-                    "data_type": "float",
-                    "default_value": "0.0"
-                }
-            ]
+                {"name": "power", "data_type": "float", "default_value": "0.0"},
+            ],
         }
 
     def calculate(

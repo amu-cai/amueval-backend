@@ -32,27 +32,19 @@ class LogLoss(MetricBase):
             "name": "Log loss",
             "link": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.log_loss.html#sklearn.metrics.log_loss",
             "parameters": [
-                {
-                    "name": "eps",
-                    "data_type": "float | str",
-                    "default_value": "auto"
-                },
-                {
-                    "name": "normalize",
-                    "data_type": "bool",
-                    "default_value": "True"
-                },
+                {"name": "eps", "data_type": "float | str", "default_value": "auto"},
+                {"name": "normalize", "data_type": "bool", "default_value": "True"},
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "labels",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
-                }
-            ]
+                    "default_value": "None",
+                },
+            ],
         }
 
     def calculate(
@@ -84,4 +76,7 @@ class LogLoss(MetricBase):
                 labels=self.labels,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

@@ -25,17 +25,13 @@ class Accuracy(MetricBase):
             "name": "accuracy",
             "link": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score",
             "parameters": [
-                {
-                    "name": "normalize",
-                    "data_type": "bool",
-                    "default_value": "True"
-                },
+                {"name": "normalize", "data_type": "bool", "default_value": "True"},
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
-                }
-            ]
+                    "default_value": "None",
+                },
+            ],
         }
 
     def calculate(
@@ -65,4 +61,7 @@ class Accuracy(MetricBase):
                 sample_weight=self.sample_weight,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

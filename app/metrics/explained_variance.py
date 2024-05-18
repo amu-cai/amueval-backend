@@ -33,20 +33,16 @@ class ExplainedVariance(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "multioutput",
                     "data_type": "str | list[Any]",
                     "default_value": "uniform_average",
-                    "values": "raw_values, uniform_average, variance_weighted"
+                    "values": "raw_values, uniform_average, variance_weighted",
                 },
-                {
-                    "name": "force_finite",
-                    "data_type": "bool",
-                    "default_value": "True"
-                }
-            ]
+                {"name": "force_finite", "data_type": "bool", "default_value": "True"},
+            ],
         }
 
     def calculate(

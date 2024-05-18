@@ -31,27 +31,15 @@ class DCG(MetricBase):
             "name": "Discounted cumulative gain",
             "link": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.dcg_score.html#sklearn.metrics.dcg_score",
             "parameters": [
-                {
-                    "name": "k",
-                    "data_type": "int | None",
-                    "default_value": "None"
-                },
-                {
-                    "name": "log_base",
-                    "data_type": "float",
-                    "default_value": "2.0"
-                },
+                {"name": "k", "data_type": "int | None", "default_value": "None"},
+                {"name": "log_base", "data_type": "float", "default_value": "2.0"},
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
-                {
-                    "name": "ignore_ties",
-                    "data_type": "bool",
-                    "default_value": "False"
-                }
-            ]
+                {"name": "ignore_ties", "data_type": "bool", "default_value": "False"},
+            ],
         }
 
     def calculate(
@@ -80,7 +68,10 @@ class DCG(MetricBase):
                 k=self.k,
                 log_base=self.log_base,
                 sample_weight=self.sample_weight,
-                ignore_ties=self.ignore_ties
+                ignore_ties=self.ignore_ties,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import HTTPException
 from metrics.metric_base import MetricBase
 
+
 class RMSE(MetricBase):
     """
     Root mean squared error class.
@@ -27,15 +28,15 @@ class RMSE(MetricBase):
                 {
                     "name": "sample_weight",
                     "data_type": "list[Any] | None",
-                    "default_value": "None"
+                    "default_value": "None",
                 },
                 {
                     "name": "multioutput",
                     "data_type": "str | list[Any]",
                     "default_value": "uniform_average",
-                    "possible_values": "raw_values, uniform_average"
-                }
-            ]
+                    "possible_values": "raw_values, uniform_average",
+                },
+            ],
         }
 
     def calculate(
@@ -73,4 +74,7 @@ class RMSE(MetricBase):
                 squared=True,
             )
         except Exception as e:
-             raise HTTPException(status_code=422, detail=f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )
