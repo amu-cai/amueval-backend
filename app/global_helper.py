@@ -18,15 +18,14 @@ if STORE_ENV is not None:
 else:
     raise FileNotFoundError("STORE_PATH env variable not defined")
 
+
 challenges_dir = f"{STORE}/challenges"
 
-
-def check_challenge_in_store(challenge_folder_name):
-    current_challenges = [
-        x.replace(f"{challenges_dir}/", "") for x in glob(f"{challenges_dir}/*")
-    ]
-    if challenge_folder_name in current_challenges:
+def check_challenge_in_store(file_name):
+    file_path = os.path.join(challenges_dir, file_name + '.tsv')
+    if os.path.exists(file_path):
         return True
+    return False
 
 
 def check_zip_structure(zip_ref, folder_name, required_files):
@@ -63,6 +62,7 @@ async def save_expected_file(file: UploadFile, file_name: str) -> str:
     finally:
         file.file.close()
     """
+    print('zapisuje expected', file_path)
     return file_path
 
 
@@ -76,7 +76,7 @@ async def save_zip_file(file):
     return temp_zip_path
 
 
-def check_file_extension(file):
+def check_file_extension(file, extension='zip'):
     file_ext = file.filename.split(".").pop()
-    if file_ext != "zip":
+    if file_ext != extension:
         raise HTTPException(status_code=422, detail="Bad extension")

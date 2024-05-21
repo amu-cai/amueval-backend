@@ -44,8 +44,7 @@ async def submit(
 ):
     submitter = evaluation_helper.check_submitter(username)
     description = evaluation_helper.check_description(description)
-    check_file_extension(submission_file)
-    temp_zip_path = await save_zip_file(submission_file)
+    check_file_extension(submission_file, 'tsv')
 
     async with async_session as session:
         challenge = (
@@ -54,6 +53,8 @@ async def submit(
             .one()
         )
 
+    challenge_name = challenge.title
+
     if challenge.deadline != "":
         if datetime.strptime(challenge.deadline, "%d-%m-%Y, %H:%M:%S") < datetime.now():
             raise HTTPException(
@@ -61,79 +62,31 @@ async def submit(
                 detail="Deadline for submissions to the challenge has passed",
             )
 
+    challenge_not_exist_error = not check_challenge_in_store(challenge_name)
+    if challenge_not_exist_error:
+        raise HTTPException(
+            status_code=422, detail=f'Expected file for challenge "{challenge_name}" does not exist in store!'
+        )
+
     metric = challenge.main_metric
     parameters = challenge.main_metric_parameters
 
-    dev_result = 0
-    test_result = 0
-
-    required_submission_files = ["dev-0/out.tsv", "test-A/out.tsv"]
-    with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
-        challenge_name = zip_ref.filelist[0].filename[:-1]
-
-        folder_name_error = not challenge_title == challenge_name
-        challenge_not_exist_error = not check_challenge_in_store(challenge_name)
-        structure_error = check_zip_structure(
-            zip_ref, challenge_name, required_submission_files
-        )
-
-        if True not in [folder_name_error, challenge_not_exist_error, structure_error]:
-            for file in zip_ref.filelist:
-                if file.filename == f"{challenge_name}/dev-0/out.tsv":
-                    with zip_ref.open(file, "r") as submission_out_content:
-                        dev_file_from_challenge = open(
-                            f"{challenges_dir}/{challenge_name}/dev-0/expected.tsv", "r"
-                        )
-                        challenge_results = [
-                            float(line) for line in dev_file_from_challenge.readlines()
-                        ]
-                        submission_results = [
-                            float(line) for line in submission_out_content.readlines()
-                        ]
-                        dev_result = await evaluate(
-                            metric=metric,
-                            parameters=parameters,
-                            out=submission_results,
-                            expected=challenge_results,
-                        )
-
-                if file.filename == f"{challenge_name}/test-A/out.tsv":
-                    with zip_ref.open(file, "r") as submission_out_content:
-                        test_file_from_challenge = open(
-                            f"{challenges_dir}/{challenge_name}/test-A/expected.tsv",
-                            "r",
-                        )
-                        challenge_results = [
-                            float(line) for line in test_file_from_challenge.readlines()
-                        ]
-                        submission_results = [
-                            float(line) for line in submission_out_content.readlines()
-                        ]
-                        test_result = await evaluate(
-                            metric=metric,
-                            parameters=parameters,
-                            out=submission_results,
-                            expected=challenge_results,
-                        )
-
-    os.remove(temp_zip_path)
-
-    if folder_name_error:
-        raise HTTPException(
-            status_code=422,
-            detail=f'Invalid submission folder name "{challenge_name}" - is not equal to submission title "{challenge_title}"',
-        )
-
-    if challenge_not_exist_error:
-        raise HTTPException(
-            status_code=422, detail=f'Submission "{challenge_name}" not exist in store!'
-        )
-
-    if structure_error:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Bad submission structure! Submission required files: {str(required_submission_files)}",
-        )
+    expected_file = open(
+        f"{challenges_dir}/{challenge_name}.tsv",
+        "r",
+    )
+    expected_results = [
+        float(line) for line in expected_file.readlines()
+    ]
+    submission_results = [
+        float(line.strip()) for line in (await submission_file.read()).decode('utf-8').splitlines()
+    ]
+    test_result = await evaluate(
+        metric=metric,
+        parameters=parameters,
+        out=submission_results,
+        expected=expected_results,
+    )
 
     timestamp = datetime.now().strftime("%d-%m-%Y, %H:%M:%S")
 
@@ -141,7 +94,8 @@ async def submit(
         challenge=challenge_title,
         submitter=submitter,
         description=description,
-        dev_result=dev_result,
+        # docelowo kolumna do usunięcia z bazy
+        dev_result=0,
         test_result=test_result,
         timestamp=timestamp,
         deleted=False,
