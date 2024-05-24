@@ -10,8 +10,6 @@ services:
       - DB_PASS=${DB_PASS}
     ports:
       - 5432:5432
-    # volumes:
-    #   - ./database/create_fixtures.sql:/docker-entrypoint-initdb.d/create_fixtures.sql
 
   app:
     build:
