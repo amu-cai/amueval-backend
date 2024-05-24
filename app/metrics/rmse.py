@@ -71,7 +71,7 @@ class RMSE(MetricBase):
                 y_pred=out,
                 sample_weight=self.sample_weight,
                 multioutput=self.multioutput,
-                squared=True,
+                squared=False,
             )
         except Exception as e:
             raise HTTPException(
