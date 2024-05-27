@@ -53,12 +53,13 @@ app.add_middleware(
 user_dependency = Annotated[dict, Depends(auth.get_current_user)]
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
 
-auth_router = APIRouter(prefix="/auth", tags=["auth"])
-
 
 @app.on_event("startup")
 async def startup():
     await create_tables()
+
+
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @auth_router.post("/create-user", status_code=status.HTTP_201_CREATED)

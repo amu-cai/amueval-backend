@@ -97,3 +97,24 @@ class Submission(Base):
             f"deleted={self.deleted}"
             ")>"
         )
+
+
+class Test(Base):
+    __tablename__ = "tests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    challenge = Column(Integer, ForeignKey("challenges.id"))
+    metric = Column(String)
+    name = Column(String)
+    active = Column(Boolean)
+
+    def __repr__(self) -> str:
+        return (
+            "<Test("
+            f"id={self.id}, "
+            f"challenge={self.challenge}, "
+            f"metric={self.metric}, "
+            f"name={self.name}, "
+            f"active={self.active}, "
+            ")>"
+        )

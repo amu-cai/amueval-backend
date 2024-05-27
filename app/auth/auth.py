@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime
-from typing import Annotated, cast
+from typing import Annotated
 from fastapi import Depends, HTTPException
 from starlette import status
 from database.models import User
