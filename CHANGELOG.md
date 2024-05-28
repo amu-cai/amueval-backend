@@ -2,4 +2,4 @@
 
 Features:
 
-* ability to change email address in the account profile tab
+* Officially online.
