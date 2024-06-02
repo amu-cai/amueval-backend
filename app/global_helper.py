@@ -10,7 +10,7 @@ from sqlalchemy import (
 from database.models import Challenge
 from secrets import token_hex
 import os
-from fastapi import (HTTPException, UploadFile)
+from fastapi import HTTPException, UploadFile
 
 STORE_ENV = os.getenv("STORE_PATH")
 if STORE_ENV is not None:
@@ -21,8 +21,9 @@ else:
 
 challenges_dir = f"{STORE}/challenges"
 
+
 def check_challenge_in_store(file_name):
-    file_path = os.path.join(challenges_dir, file_name + '.tsv')
+    file_path = os.path.join(challenges_dir, file_name + ".tsv")
     if os.path.exists(file_path):
         return True
     return False
@@ -62,7 +63,7 @@ async def save_expected_file(file: UploadFile, file_name: str) -> str:
     finally:
         file.file.close()
     """
-    print('zapisuje expected', file_path)
+    print("zapisuje expected", file_path)
     return file_path
 
 
@@ -76,7 +77,7 @@ async def save_zip_file(file):
     return temp_zip_path
 
 
-def check_file_extension(file, extension='zip'):
+def check_file_extension(file, extension="zip"):
     file_ext = file.filename.split(".").pop()
     if file_ext != extension:
         raise HTTPException(status_code=422, detail="Bad extension")

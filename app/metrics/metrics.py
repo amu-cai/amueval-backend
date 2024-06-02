@@ -104,21 +104,12 @@ def calculate_metric(
 ) -> Any:
     """Use given metric with non-default settings."""
     if metric_name not in all_metrics():
-        print("raise")
-        print(metric_name)
-        print(all_metrics())
         raise HTTPException(
             status_code=422, detail=f"Metric {metric_name} is not defined"
         )
     else:
         metric = getattr(Metrics(), metric_name)
         metric_params = metric.model_fields.keys()
-
-        print("metric_params")
-        print(set(metric_params))
-
-        print("params keys")
-        print(set(params.keys()))
 
         if set(params.keys()).issubset(set(metric_params)):
             return metric(**params).calculate(expected, out)

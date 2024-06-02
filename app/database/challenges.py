@@ -10,6 +10,7 @@ from sqlalchemy import (
     select,
 )
 from global_helper import check_challenge_exists, save_zip_file, check_file_extension
+
 # from evaluation.evaluation import submit_test
 import os
 

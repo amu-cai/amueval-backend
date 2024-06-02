@@ -44,7 +44,7 @@ async def submit(
 ):
     submitter = evaluation_helper.check_submitter(username)
     description = evaluation_helper.check_description(description)
-    check_file_extension(submission_file, 'tsv')
+    check_file_extension(submission_file, "tsv")
 
     async with async_session as session:
         challenge = (
@@ -65,7 +65,8 @@ async def submit(
     challenge_not_exist_error = not check_challenge_in_store(challenge_name)
     if challenge_not_exist_error:
         raise HTTPException(
-            status_code=422, detail=f'Expected file for challenge "{challenge_name}" does not exist in store!'
+            status_code=422,
+            detail=f'Expected file for challenge "{challenge_name}" does not exist in store!',
         )
 
     metric = challenge.main_metric
@@ -75,11 +76,10 @@ async def submit(
         f"{challenges_dir}/{challenge_name}.tsv",
         "r",
     )
-    expected_results = [
-        float(line) for line in expected_file.readlines()
-    ]
+    expected_results = [float(line) for line in expected_file.readlines()]
     submission_results = [
-        float(line.strip()) for line in (await submission_file.read()).decode('utf-8').splitlines()
+        float(line.strip())
+        for line in (await submission_file.read()).decode("utf-8").splitlines()
     ]
     test_result = await evaluate(
         metric=metric,

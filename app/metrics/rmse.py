@@ -58,13 +58,6 @@ class RMSE(MetricBase):
         -------
         Value of the metric.
         """
-        print("sample_weight")
-        print(self.sample_weight)
-        print("multioutput")
-        print(self.multioutput)
-        print(len(out))
-        print([i for i in range(len(out))])
-
         try:
             return sk_metrics.mean_squared_error(
                 y_true=expected,
