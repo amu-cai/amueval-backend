@@ -56,7 +56,7 @@ async def submit(
     challenge_name = challenge.title
 
     if challenge.deadline != "":
-        if datetime.strptime(challenge.deadline, "%d-%m-%Y, %H:%M:%S") < datetime.now():
+        if datetime.strptime(challenge.deadline[:19], "%Y-%m-%dT%H:%M:%S") < datetime.now():
             raise HTTPException(
                 status_code=422,
                 detail="Deadline for submissions to the challenge has passed",
