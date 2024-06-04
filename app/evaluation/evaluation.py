@@ -88,7 +88,7 @@ async def submit(
         expected=expected_results,
     )
 
-    timestamp = datetime.now().strftime("%d-%m-%Y, %H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     create_submission_model = Submission(
         challenge=challenge_title,
