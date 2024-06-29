@@ -42,8 +42,6 @@ class Challenge(Base):
     source = Column(String)
     type = Column(String)
     description = Column(String)
-    main_metric = Column(String)
-    main_metric_parameters = Column(String)
     best_score = Column(Float)
     deadline = Column(String)
     award = Column(String)
@@ -73,15 +71,15 @@ class Challenge(Base):
 
 
 class Submission(Base):
-    __tablename__ = "submission"
+    __tablename__ = "submissions"
 
     id = Column(Integer, primary_key=True, index=True)
-    challenge = Column(String, ForeignKey("challenges.title"))
-    submitter = Column(String, ForeignKey("users.username"))
+    challenge = Column(String, ForeignKey("challenges.id"))
+    submitter = Column(String, ForeignKey("users.id"))
     description = Column(String)
     dev_result = Column(Float)
     test_result = Column(Float)
-    timestamp = Column(String)
+    stamp = Column(String)
     deleted = Column(Boolean)
 
     def __repr__(self) -> str:
@@ -93,7 +91,7 @@ class Submission(Base):
             f"description={self.description}, "
             f"dev_result={self.dev_result}, "
             f"test_result={self.test_result}, "
-            f"timestamp={self.timestamp}, "
+            f"stamp={self.stamp}, "
             f"deleted={self.deleted}"
             ")>"
         )
@@ -105,7 +103,8 @@ class Test(Base):
     id = Column(Integer, primary_key=True, index=True)
     challenge = Column(Integer, ForeignKey("challenges.id"))
     metric = Column(String)
-    name = Column(String)
+    metric_parameters = Column(String)
+    main_metric = Column(Boolean)
     active = Column(Boolean)
 
     def __repr__(self) -> str:
@@ -114,7 +113,29 @@ class Test(Base):
             f"id={self.id}, "
             f"challenge={self.challenge}, "
             f"metric={self.metric}, "
-            f"name={self.name}, "
-            f"active={self.active}, "
+            f"metric_parameters={self.metric_parameters}, "
+            f"main_metric={self.main_metric}, "
+            f"active={self.active}"
+            ")>"
+        )
+
+
+class Evaluation(Base):
+    __tablename__ = "evaluations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test = Column(Integer, ForeignKey("tests.id"))
+    submission = Column(Integer, ForeignKey("submission.id"))
+    score = Column(Float)
+    stamp = Column(String)
+
+    def __repr__(self) -> str:
+        return (
+            "<Evaluation("
+            f"id={self.id}, "
+            f"test={self.test}, "
+            f"submission={self.submission}, "
+            f"score={self.score}, "
+            f"stamp={self.stamp}"
             ")>"
         )
