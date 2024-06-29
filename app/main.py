@@ -18,7 +18,7 @@ from global_helper import (
     check_challenge_exists,
     save_expected_file,
 )
-from database.challenges import post_create_challenge
+from database.challenges import add_challenge
 
 engine = get_engine()
 session = get_session(engine)
@@ -115,6 +115,7 @@ async def create_challenge1(
     parameters: Annotated[str, Form()] = "",
     sorting: Annotated[str, Form()] = "",
     challenge_file: UploadFile = File(...),
+    additional_metrics: Annotated[str, Form()] = "",
 ):
     # TODO move db methods to their src files and thor exceptions only from
     # endpoints
@@ -139,24 +140,32 @@ async def create_challenge1(
 
     await save_expected_file(challenge_file, challenge_title)
 
-    challenge_input_model: ChallengeInputModel = ChallengeInputModel(
+    added_challenge = await add_challenge(
+        async_session=db,
+        username=user["username"],
         title=challenge_title,
-        challenge_source=challenge_source,
-        description=description,
         type=type,
-        main_metric=metric,
-        main_metric_parameters=parameters,
+        source=challenge_source,
+        description=description,
+        best_score=None,
         deadline=deadline,
         award=award,
         sorting=sorting,
+        readme="",
+        deleted=False,
     )
 
-    return await post_create_challenge(
-        async_session=db,
-        username=user["username"],
-        challenge_file=challenge_file,
-        challenge_input_model=challenge_input_model,
+    create_metrics = await create_tests(
+        main_metric=metric,
+        main_metric_parameters=parameters,
+        additional_metrics=additional_metrics,
     )
+
+    return {
+        "success": True,
+        "message": "Challenge uploaded successfully",
+        "challenge_title": added_challenge.title,
+    }
 
 
 @challenges_router.post("/create-challenge")
