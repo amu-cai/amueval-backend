@@ -134,7 +134,7 @@ async def create_challenge1(
     if not proper_file_extension:
         raise HTTPException(
             status_code=422,
-            detail=f"File <{challenge_file.filename}> is not a TSV file"
+            detail=f"File <{challenge_file.filename}> is not a TSV file",
         )
 
     await save_expected_file(challenge_file, challenge_title)

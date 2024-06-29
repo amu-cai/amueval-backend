@@ -1,16 +1,11 @@
 from fastapi import UploadFile, File
 from database.models import Challenge
-import challenges.challenges_helper as challenges_helper
 from challenges.models import ChallengeInputModel
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
 )
-from sqlalchemy import (
-    select,
-)
-from global_helper import check_challenge_exists, save_zip_file, check_file_extension
-# from evaluation.evaluation import submit_test
+
 import os
 
 STORE_ENV = os.getenv("STORE_PATH")
