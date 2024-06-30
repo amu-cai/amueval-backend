@@ -125,7 +125,7 @@ class Evaluation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     test = Column(Integer, ForeignKey("tests.id"))
-    submission = Column(Integer, ForeignKey("submission.id"))
+    submission = Column(Integer, ForeignKey("submissions.id"))
     score = Column(Float)
     stamp = Column(String)
 
