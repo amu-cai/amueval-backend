@@ -74,8 +74,8 @@ class Submission(Base):
     __tablename__ = "submissions"
 
     id = Column(Integer, primary_key=True, index=True)
-    challenge = Column(String, ForeignKey("challenges.id"))
-    submitter = Column(String, ForeignKey("users.id"))
+    challenge = Column(Integer, ForeignKey("challenges.id"))
+    submitter = Column(Integer, ForeignKey("users.id"))
     description = Column(String)
     dev_result = Column(Float)
     test_result = Column(Float)
