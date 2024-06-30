@@ -101,8 +101,8 @@ async def edit_user(
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
 
 
-@challenges_router.post("/create-challenge1")
-async def create_challenge1(
+@challenges_router.post("/create-challenge")
+async def create_challenge(
     db: db_dependency,
     user: user_dependency,
     challenge_title: Annotated[str, Form()],
@@ -169,41 +169,6 @@ async def create_challenge1(
         "message": "Challenge uploaded successfully",
         "challenge_title": added_challenge.title,
     }
-
-
-@challenges_router.post("/create-challenge")
-async def create_challenge(
-    db: db_dependency,
-    user: user_dependency,
-    challenge_title: Annotated[str, Form()],
-    challenge_source: Annotated[str, Form()] = "",
-    description: Annotated[str, Form()] = "",
-    deadline: Annotated[str, Form()] = "",
-    award: Annotated[str, Form()] = "",
-    type: Annotated[str, Form()] = "",
-    metric: Annotated[str, Form()] = "",
-    parameters: Annotated[str, Form()] = "",
-    sorting: Annotated[str, Form()] = "",
-    challenge_file: UploadFile = File(...),
-):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    challenge_input_model: ChallengeInputModel = ChallengeInputModel(
-        title=challenge_title,
-        challenge_source=challenge_source,
-        description=description,
-        type=type,
-        main_metric=metric,
-        main_metric_parameters=parameters,
-        deadline=deadline,
-        award=award,
-        sorting=sorting,
-    )
-    return await challenges.create_challenge(
-        async_session=db,
-        username=user["username"],
-        challenge_file=challenge_file,
-        challenge_input_model=challenge_input_model,
-    )
 
 
 @challenges_router.get("/get-challenges")

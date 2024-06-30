@@ -3,14 +3,7 @@ import os
 from global_helper import check_challenge_in_store, check_zip_structure
 from fastapi import HTTPException
 from shutil import rmtree
-from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
-    AsyncSession,
-)
 from os.path import exists
-from sqlalchemy import (
-    select,
-)
 
 STORE_ENV = os.getenv("STORE_PATH")
 if STORE_ENV is not None:

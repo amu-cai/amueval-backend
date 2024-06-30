@@ -1,5 +1,3 @@
-import urllib.request
-from glob import glob
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
