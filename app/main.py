@@ -1,16 +1,17 @@
+import auth.auth as auth
+import challenges.challenges as challenges
+import evaluation.evaluation as evaluation
+import admin.admin as admin
+
 from pathlib import Path
 from typing import Annotated
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import UploadFile, File
-from challenges.models import ChallengeInputModel
+
 from admin.models import UserRightsModel
 from auth.models import CreateUserRequest, Token, EditUserRequest
-import auth.auth as auth
-import challenges.challenges as challenges
-import evaluation.evaluation as evaluation
-import admin.admin as admin
 from database.db_connection import get_engine, get_session
 from database.database import Base
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +20,7 @@ from global_helper import (
     save_expected_file,
 )
 from database.challenges import add_challenge
+from database.tests import add_tests
 
 engine = get_engine()
 session = get_session(engine)
@@ -142,7 +144,7 @@ async def create_challenge(
 
     added_challenge = await add_challenge(
         async_session=db,
-        username=user["username"],
+        username=user.get("username"),
         title=challenge_title,
         type=type,
         source=challenge_source,
@@ -155,10 +157,9 @@ async def create_challenge(
         deleted=False,
     )
 
-    # get challenge_id
-    create_metrics = await create_tests(
+    created_tests = await add_tests(
         async_session=db,
-        challenge=challenge_id,
+        challenge=added_challenge.get("challenge_id"),
         main_metric=metric,
         main_metric_parameters=parameters,
         additional_metrics=additional_metrics,
@@ -167,7 +168,8 @@ async def create_challenge(
     return {
         "success": True,
         "message": "Challenge uploaded successfully",
-        "challenge_title": added_challenge.title,
+        "challenge_title": added_challenge.get("title"),
+        "main_metric": created_tests.get("test_main_metric"),
     }
 
 

@@ -27,7 +27,7 @@ async def add_challenge(
     award: str,
     sorting: str,
 ):
-    challenge_model = Challenge(
+    challenge = Challenge(
         author=username,
         title=title,
         type=type,
@@ -56,11 +56,12 @@ async def add_challenge(
     """
 
     async with async_session as session:
-        session.add(challenge_model)
+        session.add(challenge)
         await session.commit()
 
     return {
         "success": True,
-        "challenge_title": challenge_model.title,
+        "challenge_title": challenge.title,
+        "challenge_id": challenge.id,
         "message": "Challenge uploaded successfully",
     }
