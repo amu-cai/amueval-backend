@@ -155,7 +155,10 @@ async def create_challenge1(
         deleted=False,
     )
 
+    # get challenge_id
     create_metrics = await create_tests(
+        async_session=db,
+        challenge=challenge_id,
         main_metric=metric,
         main_metric_parameters=parameters,
         additional_metrics=additional_metrics,

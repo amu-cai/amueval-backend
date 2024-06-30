@@ -1,3 +1,5 @@
+import json
+
 from pydantic import BaseModel
 from typing import Any
 from fastapi import HTTPException
@@ -104,9 +106,6 @@ def calculate_metric(
 ) -> Any:
     """Use given metric with non-default settings."""
     if metric_name not in all_metrics():
-        print("raise")
-        print(metric_name)
-        print(all_metrics())
         raise HTTPException(
             status_code=422, detail=f"Metric {metric_name} is not defined"
         )
@@ -114,14 +113,29 @@ def calculate_metric(
         metric = getattr(Metrics(), metric_name)
         metric_params = metric.model_fields.keys()
 
-        print("metric_params")
-        print(set(metric_params))
-
-        print("params keys")
-        print(set(params.keys()))
-
         if set(params.keys()).issubset(set(metric_params)):
             return metric(**params).calculate(expected, out)
+        else:
+            detail_info = f"Metric {metric_name} has the following params: {metric_params} and you gave those: {params}"
+            raise HTTPException(status_code=422, detail=detail_info)
+
+
+def str2metric(str_metric: str) -> MetricBase:
+    """Convert a json as string containing metric and its parameters into metric."""
+    json_metric = json.loads(str_metric)
+    metric_name = json_metric["name"]
+    params = json_metric["params"]
+
+    if metric_name not in all_metrics():
+        raise HTTPException(
+            status_code=422, detail=f"Metric {metric_name} is not defined"
+        )
+    else:
+        metric = getattr(Metrics(), metric_name)
+        metric_params = metric.model_fields.keys()
+
+        if set(params.keys()).issubset(set(metric_params)):
+            return metric(**params)
         else:
             detail_info = f"Metric {metric_name} has the following params: {metric_params} and you gave those: {params}"
             raise HTTPException(status_code=422, detail=detail_info)
