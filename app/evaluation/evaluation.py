@@ -1,3 +1,19 @@
+import zipfile
+import os
+import json
+import evaluation.evaluation_helper as evaluation_helper
+
+from datetime import datetime
+from fastapi import UploadFile, File, HTTPException
+from sqlalchemy import select
+from typing import Any
+from shutil import rmtree
+from sqlalchemy.ext.asyncio import (
+    async_sessionmaker,
+    AsyncSession,
+)
+from os.path import exists
+
 from metrics.metrics import (
     metric_info,
     calculate_metric,
@@ -7,24 +23,9 @@ from metrics.metrics import (
 from global_helper import (
     check_challenge_in_store,
     check_zip_structure,
-    save_zip_file,
     check_file_extension,
 )
-from database.models import Submission, Challenge
-import evaluation.evaluation_helper as evaluation_helper
-from datetime import datetime
-from fastapi import UploadFile, File, HTTPException
-import zipfile
-import os
-import json
-from sqlalchemy import select
-from typing import Any
-from shutil import rmtree
-from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
-    AsyncSession,
-)
-from os.path import exists
+from database.models import Submission, Challenge, Test, Evaluation
 
 STORE_ENV = os.getenv("STORE_PATH")
 if STORE_ENV is not None:
@@ -53,6 +54,16 @@ async def submit(
             .one()
         )
 
+        tests = (
+            (await session.execute(select(Test).filter_by(challenge=challenge.id)))
+            .scalars()
+        )
+
+        submitter = (
+            (await session.execute(select(User).filter_by(username=username)))
+            .scalars()
+        )
+
     challenge_name = challenge.title
 
     if challenge.deadline != "":
@@ -72,8 +83,18 @@ async def submit(
             detail=f'Expected file for challenge "{challenge_name}" does not exist in store!',
         )
 
-    metric = challenge.main_metric
-    parameters = challenge.main_metric_parameters
+    stamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+    submission = Submission(
+        challenge=challenge.id,
+        submitter=submitter.id,
+        description=description,
+        stamp=stamp,
+        deleted=False,
+    )
+    async with async_session as session:
+        session.add(submission)
+        await session.commit()
 
     expected_file = open(
         f"{challenges_dir}/{challenge_name}.tsv",
@@ -84,49 +105,33 @@ async def submit(
         float(line.strip())
         for line in (await submission_file.read()).decode("utf-8").splitlines()
     ]
-    test_result = await evaluate(
-        metric=metric,
-        parameters=parameters,
-        out=submission_results,
-        expected=expected_results,
-    )
 
-    timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    tests_evaluations = []
+    for test in tests:
+        tests_evaluations.append({
+            "score": await evaluate(
+                metric=test.metric,
+                parameters=test.metric_parameters,
+                out=submission_results,
+                expected=expected_results,
+            ),
+            "test_id": test.id,
+        })
 
-    create_submission_model = Submission(
-        challenge=challenge_title,
-        submitter=submitter,
-        description=description,
-        # docelowo kolumna do usunięcia z bazy
-        dev_result=0,
-        test_result=test_result,
-        timestamp=timestamp,
-        deleted=False,
-    )
+    evaluations = [
+        Evaluation(
+            test=test_evaluation.get("test_id"),
+            submission=submission.id,
+            score=test_evaluation.get("score"),
+            stamp=stamp,
+        )
+        for test_evaluation in tests_evaluations
+    ]
 
     async with async_session as session:
-        session.add(create_submission_model)
-        challenge = (
-            (await session.execute(select(Challenge).filter_by(title=challenge_title)))
-            .scalars()
-            .one()
-        )
+        for evaluation in evaluations:
+            session.add(evaluation)
 
-        submissions = (
-            (
-                await session.execute(
-                    select(Submission).filter_by(challenge=challenge_title)
-                )
-            )
-            .scalars()
-            .all()
-        )
-        scores = [submission.test_result for submission in submissions]
-        scores.append(test_result)
-        if challenge.sorting == "ascending":
-            challenge.best_score = min(scores)
-        else:
-            challenge.best_score = max(scores)
         await session.commit()
 
     return {

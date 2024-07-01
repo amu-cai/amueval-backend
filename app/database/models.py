@@ -42,7 +42,6 @@ class Challenge(Base):
     source = Column(String)
     type = Column(String)
     description = Column(String)
-    best_score = Column(Float)
     deadline = Column(String)
     award = Column(String)
     readme = Column(UnicodeText)
@@ -58,9 +57,6 @@ class Challenge(Base):
             f"source={self.source}, "
             f"type={self.type}, "
             f"description={self.description}, "
-            f"main_metric={self.main_metric}, "
-            f"main_metric_parameters={self.main_metric_parameters}, "
-            f"best_score={self.best_score}, "
             f"deadline={self.deadline}, "
             f"award={self.award}, "
             f"readme={self.readme}, "
@@ -77,8 +73,6 @@ class Submission(Base):
     challenge = Column(Integer, ForeignKey("challenges.id"))
     submitter = Column(Integer, ForeignKey("users.id"))
     description = Column(String)
-    dev_result = Column(Float)
-    test_result = Column(Float)
     stamp = Column(String)
     deleted = Column(Boolean)
 
@@ -89,8 +83,6 @@ class Submission(Base):
             f"challenge={self.challenge}, "
             f"submitter={self.submitter}, "
             f"description={self.description}, "
-            f"dev_result={self.dev_result}, "
-            f"test_result={self.test_result}, "
             f"stamp={self.stamp}, "
             f"deleted={self.deleted}"
             ")>"
