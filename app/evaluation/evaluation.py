@@ -1,4 +1,3 @@
-import zipfile
 import os
 import json
 import evaluation.evaluation_helper as evaluation_helper
@@ -7,12 +6,10 @@ from datetime import datetime
 from fastapi import UploadFile, File, HTTPException
 from sqlalchemy import select
 from typing import Any
-from shutil import rmtree
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
 )
-from os.path import exists
 
 from metrics.metrics import (
     metric_info,
@@ -22,7 +19,6 @@ from metrics.metrics import (
 )
 from global_helper import (
     check_challenge_in_store,
-    check_zip_structure,
     check_file_extension,
 )
 from database.models import Submission, Challenge, Test, Evaluation

@@ -216,11 +216,13 @@ async def get_metrics():
     return await evaluation.get_metrics()
 
 
+# TODO change
 @evaluation_router.get("/{challenge}/all-submissions")
 async def get_all_submissions(db: db_dependency, challenge: str):
     return await evaluation.get_all_submissions(async_session=db, challenge=challenge)
 
 
+# TODO change
 @evaluation_router.get("/{challenge}/my-submissions")
 async def get_my_submissions(db: db_dependency, challenge: str, user: user_dependency):
     await auth.check_user_exists(async_session=db, username=user["username"])
@@ -229,6 +231,8 @@ async def get_my_submissions(db: db_dependency, challenge: str, user: user_depen
     )
 
 
+# TODO change
+# TODO sort with regard to sorting in the main metric and timestamp
 @evaluation_router.get("/{challenge}/leaderboard")
 async def get_leaderboard(db: db_dependency, challenge: str):
     return await evaluation.get_leaderboard(async_session=db, challenge=challenge)

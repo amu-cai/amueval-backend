@@ -33,6 +33,8 @@ class User(Base):
         )
 
 
+# TODO delete readme
+# TODO delete sorting
 class Challenge(Base):
     __tablename__ = "challenges"
 
