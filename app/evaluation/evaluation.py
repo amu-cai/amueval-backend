@@ -21,7 +21,7 @@ from global_helper import (
     check_challenge_in_store,
     check_file_extension,
 )
-from database.models import Submission, Challenge, Test, Evaluation
+from database.models import Submission, Challenge, Test, Evaluation, User
 
 STORE_ENV = os.getenv("STORE_PATH")
 if STORE_ENV is not None:
@@ -51,13 +51,13 @@ async def submit(
         )
 
         tests = (
-            (await session.execute(select(Test).filter_by(challenge=challenge.id)))
-            .scalars()
-        )
+            await session.execute(select(Test).filter_by(challenge=challenge.id))
+        ).scalars()
 
         submitter = (
             (await session.execute(select(User).filter_by(username=username)))
             .scalars()
+            .one()
         )
 
     challenge_name = challenge.title
@@ -104,15 +104,17 @@ async def submit(
 
     tests_evaluations = []
     for test in tests:
-        tests_evaluations.append({
-            "score": await evaluate(
-                metric=test.metric,
-                parameters=test.metric_parameters,
-                out=submission_results,
-                expected=expected_results,
-            ),
-            "test_id": test.id,
-        })
+        tests_evaluations.append(
+            {
+                "score": await evaluate(
+                    metric=test.metric,
+                    parameters=test.metric_parameters,
+                    out=submission_results,
+                    expected=expected_results,
+                ),
+                "test_id": test.id,
+            }
+        )
 
     evaluations = [
         Evaluation(
@@ -166,35 +168,44 @@ async def get_metrics():
 async def get_all_submissions(
     async_session: async_sessionmaker[AsyncSession], challenge: str
 ):
-    result = []
-
     async with async_session as session:
-        submissions = await session.execute(
-            select(Submission).filter_by(challenge=challenge)
-        )
-        sorting = (
-            (await session.execute(select(Challenge).filter_by(title=challenge)))
+        challenge_id = (
+            await session.execute(select(Challenge).filter_by(title=challenge))
+        ).scalar()
+
+        submissions = (
+            (
+                await session.execute(
+                    select(Submission).filter_by(challenge=challenge_id)
+                )
+            )
             .scalars()
-            .one()
-            .sorting
+            .all()
         )
 
-    for submission in submissions.scalars().all():
-        result.append(
+    results = []
+    for submission in submissions:
+        async with async_session as session:
+            evaluations = await session.execute(
+                select(Evaluation).filter_by(submission=submission.id)
+            )
+
+        results.append(
             {
                 "id": submission.id,
                 "submitter": submission.submitter,
                 "description": submission.description,
-                "dev_result": submission.dev_result,
-                "test_result": submission.test_result,
                 "timestamp": submission.timestamp,
+                "main_metric_result": 1,
             }
         )
 
-    result = sorted(
-        result, key=lambda d: d["test_result"], reverse=(sorting == "descending")
+    sorted_result = sorted(
+        results,
+        key=lambda d: d["main_metric_result"],
+        # result, key=lambda d: d["test_result"], reverse=(sorting == "descending")
     )
-    return result
+    return sorted_result
 
 
 async def get_my_submissions(
@@ -224,49 +235,78 @@ async def get_my_submissions(
 
 
 async def get_leaderboard(
-    async_session: async_sessionmaker[AsyncSession], challenge: str
+    async_session: async_sessionmaker[AsyncSession], challenge_name: str
 ):
-    result = []
-
     async with async_session as session:
-        submissions = await session.execute(
-            select(Submission).filter_by(challenge=challenge)
-        )
-        sorting = (
-            (await session.execute(select(Challenge).filter_by(title=challenge)))
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=challenge_name)))
             .scalars()
             .one()
-            .sorting
         )
 
-    submissions = submissions.scalars().all()
+        test = (
+            (
+                await session.execute(
+                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
+                )
+            )
+            .scalars()
+            .one()
+        )
+
+        evaluations = (
+            (await session.execute(select(Evaluation).filter_by(test=test.id)))
+            .scalars()
+            .all()
+        )
+
+        submissions = (
+            (
+                await session.execute(
+                    select(Submission).filter_by(challenge=challenge.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    sorting = challenge.sorting
     submitters = list(set([submission.submitter for submission in submissions]))
 
+    result = []
     for submitter in submitters:
-        submitter_submissions = list(
-            filter(lambda submission: submission.submitter == submitter, submissions)
+        submitter_submissions = [
+            submission.id
+            for submission in submissions
+            if submission.submitter == submitter
+        ]
+
+        sorted_submitter_evaluations = [
+            evaluation
+            for evaluation in evaluations
+            if evaluation.submission in submitter_submissions
+        ].sort(key=lambda x: x.score, reverse=True)
+
+        best_result_evaluation = sorted_submitter_evaluations[0]
+        best_result_submission = next(
+            submission
+            for submission in submissions
+            if submission.id == best_result_evaluation.submission
         )
-        max_test_result = max(
-            [submission.test_result for submission in submitter_submissions]
-        )
-        best_result = list(
-            filter(
-                lambda submission: submission.test_result == max_test_result,
-                submitter_submissions,
-            )
-        )[0]
+
         result.append(
             {
-                "id": best_result.id,
-                "submitter": best_result.submitter,
-                "description": best_result.description,
-                "dev_result": best_result.dev_result,
-                "test_result": best_result.test_result,
-                "timestamp": best_result.timestamp,
+                "id": best_result_evaluation.submission,
+                "submitter": submitter,
+                "description": best_result_submission.description,
+                "dev_result": best_result_evaluation.score,
+                "test_result": best_result_evaluation.score,
+                "timestamp": best_result_submission.timestamp,
             }
         )
 
     result = sorted(
         result, key=lambda d: d["test_result"], reverse=(sorting == "descending")
     )
+
     return result

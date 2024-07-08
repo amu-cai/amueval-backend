@@ -119,7 +119,7 @@ async def create_challenge(
     challenge_file: UploadFile = File(...),
     additional_metrics: Annotated[str, Form()] = "",
 ):
-    # TODO move db methods to their src files and thor exceptions only from
+    # TODO move db methods to their src files and thow exceptions only from
     # endpoints
     await auth.check_user_exists(async_session=db, username=user["username"])
 
@@ -146,15 +146,12 @@ async def create_challenge(
         async_session=db,
         username=user.get("username"),
         title=challenge_title,
-        type=type,
         source=challenge_source,
         description=description,
-        best_score=None,
+        type=type,
         deadline=deadline,
         award=award,
         sorting=sorting,
-        readme="",
-        deleted=False,
     )
 
     created_tests = await add_tests(
@@ -168,7 +165,7 @@ async def create_challenge(
     return {
         "success": True,
         "message": "Challenge uploaded successfully",
-        "challenge_title": added_challenge.get("title"),
+        "challenge_title": added_challenge.get("challenge_title"),
         "main_metric": created_tests.get("test_main_metric"),
     }
 
@@ -235,7 +232,7 @@ async def get_my_submissions(db: db_dependency, challenge: str, user: user_depen
 # TODO sort with regard to sorting in the main metric and timestamp
 @evaluation_router.get("/{challenge}/leaderboard")
 async def get_leaderboard(db: db_dependency, challenge: str):
-    return await evaluation.get_leaderboard(async_session=db, challenge=challenge)
+    return await evaluation.get_leaderboard(async_session=db, challenge_name=challenge)
 
 
 admin_router = APIRouter(prefix="/admin", tags=["admin"])

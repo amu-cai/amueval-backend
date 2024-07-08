@@ -33,7 +33,6 @@ async def add_challenge(
         type=type,
         source=source,
         description=description,
-        best_score=None,
         deadline=deadline,
         award=award,
         sorting=sorting,
@@ -57,11 +56,17 @@ async def add_challenge(
 
     async with async_session as session:
         session.add(challenge)
+
+        await session.flush()
+
+        challenge_id = challenge.id
+        challenge_title = challenge.title
+
         await session.commit()
 
     return {
         "success": True,
-        "challenge_title": challenge.title,
-        "challenge_id": challenge.id,
+        "challenge_title": challenge_title,
+        "challenge_id": challenge_id,
         "message": "Challenge uploaded successfully",
     }

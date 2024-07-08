@@ -75,7 +75,7 @@ class Submission(Base):
     challenge = Column(Integer, ForeignKey("challenges.id"))
     submitter = Column(Integer, ForeignKey("users.id"))
     description = Column(String)
-    stamp = Column(String)
+    timestamp = Column(String)
     deleted = Column(Boolean)
 
     def __repr__(self) -> str:
@@ -85,7 +85,7 @@ class Submission(Base):
             f"challenge={self.challenge}, "
             f"submitter={self.submitter}, "
             f"description={self.description}, "
-            f"stamp={self.stamp}, "
+            f"time_stamp={self.timestamp}, "
             f"deleted={self.deleted}"
             ")>"
         )
@@ -121,7 +121,7 @@ class Evaluation(Base):
     test = Column(Integer, ForeignKey("tests.id"))
     submission = Column(Integer, ForeignKey("submissions.id"))
     score = Column(Float)
-    stamp = Column(String)
+    timestamp = Column(String)
 
     def __repr__(self) -> str:
         return (
@@ -130,6 +130,6 @@ class Evaluation(Base):
             f"test={self.test}, "
             f"submission={self.submission}, "
             f"score={self.score}, "
-            f"stamp={self.stamp}"
+            f"time_stamp={self.timestamp}"
             ")>"
         )

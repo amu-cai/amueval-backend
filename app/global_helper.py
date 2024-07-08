@@ -42,6 +42,8 @@ async def check_challenge_exists(
         challenge_exists = (
             await session.execute(select(Challenge.title).filter_by(title=title))
         ).fetchone() is not None
+        await session.commit()
+
     return challenge_exists
 
 
@@ -61,7 +63,6 @@ async def save_expected_file(file: UploadFile, file_name: str) -> str:
     finally:
         file.file.close()
     """
-    print("zapisuje expected", file_path)
     return file_path
 
 
