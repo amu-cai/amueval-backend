@@ -40,28 +40,46 @@ async def all_challenges(
             )
 
             try:
-                best_score = (
+                scores = (
                     (await session.execute(select(Evaluation).filter_by(test=test.id)))
                     .scalars()
-                    .one()
-                ).score
+                )
+                sorted_scores = sorted(scores, key=lambda x: x["score"])
+                best_score = sorted_scores[0] if sorted_scores else None
             except NoResultFound:
                 best_score = None
 
-        result.append(
-            {
-                "id": challenge.id,
-                "title": challenge.title,
-                "type": challenge.type,
-                "description": challenge.description,
-                "main_metric": test.main_metric,
-                "best_sore": best_score,
-                "deadline": challenge.deadline,
-                "award": challenge.award,
-                "deleted": challenge.deleted,
-                "sorting": challenge.sorting,
-            }
-        )
+        if best_score is not None:
+            result.append(
+                {
+                    "id": challenge.id,
+                    "title": challenge.title,
+                    "type": challenge.type,
+                    "description": challenge.description,
+                    "main_metric": test.main_metric,
+                    "best_sore": best_score,
+                    "deadline": challenge.deadline,
+                    "award": challenge.award,
+                    "deleted": challenge.deleted,
+                    "sorting": challenge.sorting,
+                }
+            )
+        else:
+            result.append(
+                {
+                    "id": challenge.id,
+                    "title": challenge.title,
+                    "type": challenge.type,
+                    "description": challenge.description,
+                    "main_metric": test.main_metric,
+                    "best_sore": "No best score yet",
+                    "deadline": challenge.deadline,
+                    "award": challenge.award,
+                    "deleted": challenge.deleted,
+                    "sorting": challenge.sorting,
+                }
+            )
+
     return result
 
 
