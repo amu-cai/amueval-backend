@@ -85,7 +85,8 @@ async def get_challenge_info(async_session, challenge: str):
 
         sorted_evaluations = (
             (await session.execute(select(Evaluation).filter_by(test=test.id)))
-            .scalars().all()
+            .scalars()
+            .all()
         ).sort(key=lambda x: x.score, reverse=True)
 
     best_score = sorted_evaluations[0] if sorted_evaluations else None

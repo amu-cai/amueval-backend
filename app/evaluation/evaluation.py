@@ -47,17 +47,17 @@ async def submit(
         challenge = (
             (await session.execute(select(Challenge).filter_by(title=challenge_title)))
             .scalars()
-            .one()
+            .first()
         )
 
         tests = (
             await session.execute(select(Test).filter_by(challenge=challenge.id))
-        ).scalars()
+        ).scalars().all()
 
         submitter = (
             (await session.execute(select(User).filter_by(username=username)))
             .scalars()
-            .one()
+            .first()
         )
 
     challenge_name = challenge.title
@@ -79,13 +79,13 @@ async def submit(
             detail=f'Expected file for challenge "{challenge_name}" does not exist in store!',
         )
 
-    stamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     submission = Submission(
         challenge=challenge.id,
         submitter=submitter.id,
         description=description,
-        stamp=stamp,
+        timestamp=timestamp,
         deleted=False,
     )
     async with async_session as session:
@@ -121,7 +121,7 @@ async def submit(
             test=test_evaluation.get("test_id"),
             submission=submission.id,
             score=test_evaluation.get("score"),
-            stamp=stamp,
+            timestamp=timestamp,
         )
         for test_evaluation in tests_evaluations
     ]
@@ -168,43 +168,64 @@ async def get_metrics():
 async def get_all_submissions(
     async_session: async_sessionmaker[AsyncSession], challenge: str
 ):
+    results = []
     async with async_session as session:
-        challenge_id = (
-            await session.execute(select(Challenge).filter_by(title=challenge))
-        ).scalar()
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=challenge)))
+            .scalars()
+            .first()
+        )
+
+        main_metric_test = (
+            (
+                await session.execute(
+                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
+                )
+            )
+            .scalars()
+            .first()
+        )
 
         submissions = (
             (
                 await session.execute(
-                    select(Submission).filter_by(challenge=challenge_id)
+                    select(Submission).filter_by(challenge=challenge.id)
                 )
             )
             .scalars()
             .all()
         )
 
-    results = []
-    for submission in submissions:
-        async with async_session as session:
-            evaluations = await session.execute(
-                select(Evaluation).filter_by(submission=submission.id)
+        for submission in submissions:
+            evaluation = (
+                (
+                    await session.execute(
+                        select(Evaluation).filter_by(
+                            submission=submission.id, test=main_metric_test.id
+                        )
+                    )
+                )
+                .scalars()
+                .first()
             )
 
-        results.append(
-            {
-                "id": submission.id,
-                "submitter": submission.submitter,
-                "description": submission.description,
-                "timestamp": submission.timestamp,
-                "main_metric_result": 1,
-            }
-        )
+            if evaluation is not None:
+                results.append(
+                    {
+                        "id": submission.id,
+                        "submitter": submission.submitter,
+                        "description": submission.description,
+                        "timestamp": submission.timestamp,
+                        "main_metric_result": evaluation.score,
+                    }
+                )
 
     sorted_result = sorted(
         results,
         key=lambda d: d["main_metric_result"],
-        # result, key=lambda d: d["test_result"], reverse=(sorting == "descending")
+        reverse=(challenge.sorting == "descending"),
     )
+
     return sorted_result
 
 
@@ -241,7 +262,7 @@ async def get_leaderboard(
         challenge = (
             (await session.execute(select(Challenge).filter_by(title=challenge_name)))
             .scalars()
-            .one()
+            .first()
         )
 
         test = (
@@ -251,7 +272,7 @@ async def get_leaderboard(
                 )
             )
             .scalars()
-            .one()
+            .first()
         )
 
         evaluations = (
@@ -287,23 +308,24 @@ async def get_leaderboard(
             if evaluation.submission in submitter_submissions
         ].sort(key=lambda x: x.score, reverse=True)
 
-        best_result_evaluation = sorted_submitter_evaluations[0]
-        best_result_submission = next(
-            submission
-            for submission in submissions
-            if submission.id == best_result_evaluation.submission
-        )
+        if sorted_submitter_evaluations:
+            best_result_evaluation = sorted_submitter_evaluations[0]
+            best_result_submission = next(
+                submission
+                for submission in submissions
+                if submission.id == best_result_evaluation.submission
+            )
 
-        result.append(
-            {
-                "id": best_result_evaluation.submission,
-                "submitter": submitter,
-                "description": best_result_submission.description,
-                "dev_result": best_result_evaluation.score,
-                "test_result": best_result_evaluation.score,
-                "timestamp": best_result_submission.timestamp,
-            }
-        )
+            result.append(
+                {
+                    "id": best_result_evaluation.submission,
+                    "submitter": submitter,
+                    "description": best_result_submission.description,
+                    "dev_result": best_result_evaluation.score,
+                    "test_result": best_result_evaluation.score,
+                    "timestamp": best_result_submission.timestamp,
+                }
+            )
 
     result = sorted(
         result, key=lambda d: d["test_result"], reverse=(sorting == "descending")
