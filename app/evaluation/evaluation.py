@@ -18,7 +18,6 @@ from metrics.metrics import (
     calculate_default_metric,
 )
 from global_helper import (
-    check_challenge_in_store,
     check_file_extension,
 )
 from database.models import Submission, Challenge, Test, Evaluation, User
@@ -51,8 +50,10 @@ async def submit(
         )
 
         tests = (
-            await session.execute(select(Test).filter_by(challenge=challenge.id))
-        ).scalars().all()
+            (await session.execute(select(Test).filter_by(challenge=challenge.id)))
+            .scalars()
+            .all()
+        )
 
         submitter = (
             (await session.execute(select(User).filter_by(username=username)))
@@ -72,61 +73,54 @@ async def submit(
                 detail="Deadline for submissions to the challenge has passed",
             )
 
-    challenge_not_exist_error = not check_challenge_in_store(challenge_name)
-    if challenge_not_exist_error:
-        raise HTTPException(
-            status_code=422,
-            detail=f'Expected file for challenge "{challenge_name}" does not exist in store!',
-        )
-
     timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-
-    submission = Submission(
-        challenge=challenge.id,
-        submitter=submitter.id,
-        description=description,
-        timestamp=timestamp,
-        deleted=False,
-    )
-    async with async_session as session:
-        session.add(submission)
-        await session.commit()
 
     expected_file = open(
         f"{challenges_dir}/{challenge_name}.tsv",
         "r",
     )
     expected_results = [float(line) for line in expected_file.readlines()]
+
     submission_results = [
         float(line.strip())
         for line in (await submission_file.read()).decode("utf-8").splitlines()
     ]
 
-    tests_evaluations = []
-    for test in tests:
-        tests_evaluations.append(
-            {
-                "score": await evaluate(
-                    metric=test.metric,
-                    parameters=test.metric_parameters,
-                    out=submission_results,
-                    expected=expected_results,
-                ),
-                "test_id": test.id,
-            }
-        )
-
-    evaluations = [
-        Evaluation(
-            test=test_evaluation.get("test_id"),
-            submission=submission.id,
-            score=test_evaluation.get("score"),
-            timestamp=timestamp,
-        )
-        for test_evaluation in tests_evaluations
-    ]
-
     async with async_session as session:
+        submission = Submission(
+            challenge=challenge.id,
+            submitter=submitter.id,
+            description=description,
+            timestamp=timestamp,
+            deleted=False,
+        )
+        session.add(submission)
+        await session.flush()
+
+        tests_evaluations = []
+        for test in tests:
+            tests_evaluations.append(
+                {
+                    "score": await evaluate(
+                        metric=test.metric,
+                        parameters=test.metric_parameters,
+                        out=submission_results,
+                        expected=expected_results,
+                    ),
+                    "test_id": test.id,
+                }
+            )
+
+        evaluations = [
+            Evaluation(
+                test=test_evaluation.get("test_id"),
+                submission=submission.id,
+                score=test_evaluation.get("score"),
+                timestamp=timestamp,
+            )
+            for test_evaluation in tests_evaluations
+        ]
+
         for evaluation in evaluations:
             session.add(evaluation)
 
@@ -140,8 +134,7 @@ async def submit(
 
 
 async def evaluate(metric: str, parameters: str, out: list[Any], expected: list[Any]):
-    if parameters and parameters != "":
-        parameters = parameters[1:-1].replace("\\", "")
+    if parameters and parameters != "{}":
         params_dict = json.loads(parameters)
         result = calculate_metric(
             metric_name=metric, expected=expected, out=out, params=params_dict
