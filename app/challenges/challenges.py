@@ -44,7 +44,7 @@ async def all_challenges(
                     (await session.execute(select(Evaluation).filter_by(test=test.id)))
                     .scalars()
                 )
-                sorted_scores = sorted(scores, key=lambda x: x["score"])
+                sorted_scores = sorted(scores, key=lambda x: x.score)
                 best_score = sorted_scores[0] if sorted_scores else None
             except NoResultFound:
                 best_score = None
