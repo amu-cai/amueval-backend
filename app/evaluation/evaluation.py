@@ -297,11 +297,14 @@ async def get_leaderboard(
             if submission.submitter == submitter
         ]
 
-        sorted_submitter_evaluations = [
-            evaluation
-            for evaluation in evaluations
-            if evaluation.submission in submitter_submissions
-        ].sort(key=lambda x: x.score, reverse=True)
+        sorted_submitter_evaluations = sorted(
+            [
+                evaluation
+                for evaluation in evaluations
+                if evaluation.submission in submitter_submissions
+            ],
+            key=lambda x: x.score,
+        )
 
         if sorted_submitter_evaluations:
             best_result_evaluation = sorted_submitter_evaluations[0]
