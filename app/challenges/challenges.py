@@ -41,9 +41,8 @@ async def all_challenges(
 
             try:
                 scores = (
-                    (await session.execute(select(Evaluation).filter_by(test=test.id)))
-                    .scalars()
-                )
+                    await session.execute(select(Evaluation).filter_by(test=test.id))
+                ).scalars()
                 sorted_scores = sorted(scores, key=lambda x: x.score)
                 best_score = sorted_scores[0] if sorted_scores else None
             except NoResultFound:
@@ -61,7 +60,8 @@ async def all_challenges(
                     "deadline": challenge.deadline,
                     "award": challenge.award,
                     "deleted": challenge.deleted,
-                    "sorting": challenge.sorting,
+                    # TODO: change to sorting from the metric
+                    "sorting": "descending",
                 }
             )
         else:
@@ -76,7 +76,8 @@ async def all_challenges(
                     "deadline": challenge.deadline,
                     "award": challenge.award,
                     "deleted": challenge.deleted,
-                    "sorting": challenge.sorting,
+                    # TODO: change to sorting from the metric
+                    "sorting": "descending",
                 }
             )
 
@@ -117,11 +118,11 @@ async def get_challenge_info(async_session, challenge: str):
         "mainMetric": test.metric,
         "mainMetricParameters": test.metric_parameters,
         "description": challenge.description,
-        "readme": challenge.readme,
         "source": challenge.source,
         "bestScore": best_score,
         "deadline": challenge.deadline,
         "award": challenge.award,
         "deleted": challenge.deleted,
-        "sorting": challenge.sorting,
+        # TODO: change to sorting from the metric
+        "sorting": "descending",
     }

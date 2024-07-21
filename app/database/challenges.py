@@ -25,7 +25,6 @@ async def add_challenge(
     type: str,
     deadline: str,
     award: str,
-    sorting: str,
 ):
     challenge = Challenge(
         author=username,
@@ -35,8 +34,6 @@ async def add_challenge(
         description=description,
         deadline=deadline,
         award=award,
-        sorting=sorting,
-        readme="",
         deleted=False,
     )
 

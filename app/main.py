@@ -151,7 +151,6 @@ async def create_challenge(
         type=type,
         deadline=deadline,
         award=award,
-        sorting=sorting,
     )
 
     created_tests = await add_tests(

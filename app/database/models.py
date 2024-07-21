@@ -33,8 +33,6 @@ class User(Base):
         )
 
 
-# TODO delete readme
-# TODO delete sorting
 class Challenge(Base):
     __tablename__ = "challenges"
 
@@ -46,9 +44,7 @@ class Challenge(Base):
     description = Column(String)
     deadline = Column(String)
     award = Column(String)
-    readme = Column(UnicodeText)
     deleted = Column(Boolean)
-    sorting = Column(String)
 
     def __repr__(self) -> str:
         return (
@@ -61,9 +57,7 @@ class Challenge(Base):
             f"description={self.description}, "
             f"deadline={self.deadline}, "
             f"award={self.award}, "
-            f"readme={self.readme}, "
             f"deleted={self.deleted}, "
-            f"sorting={self.sorting}"
             ")>"
         )
 

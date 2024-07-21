@@ -216,7 +216,8 @@ async def get_all_submissions(
     sorted_result = sorted(
         results,
         key=lambda d: d["main_metric_result"],
-        reverse=(challenge.sorting == "descending"),
+        # TODO: change to sorting from the metric
+        reverse=("descending"),
     )
 
     return sorted_result
@@ -284,7 +285,8 @@ async def get_leaderboard(
             .all()
         )
 
-    sorting = challenge.sorting
+    # TODO: change to sorting from the metric
+    sorting = "descending"
     submitters = list(set([submission.submitter for submission in submissions]))
 
     result = []
