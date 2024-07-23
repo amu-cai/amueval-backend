@@ -1,16 +1,17 @@
+import auth.auth as auth
+import challenges.challenges as challenges
+import evaluation.evaluation as evaluation
+import admin.admin as admin
+
 from pathlib import Path
 from typing import Annotated
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import UploadFile, File
-from challenges.models import ChallengeInputModel
+
 from admin.models import UserRightsModel
 from auth.models import CreateUserRequest, Token, EditUserRequest
-import auth.auth as auth
-import challenges.challenges as challenges
-import evaluation.evaluation as evaluation
-import admin.admin as admin
 from database.db_connection import get_engine, get_session
 from database.database import Base
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +19,8 @@ from global_helper import (
     check_challenge_exists,
     save_expected_file,
 )
-from database.challenges import post_create_challenge
+from database.challenges import add_challenge
+from database.tests import add_tests
 
 engine = get_engine()
 session = get_session(engine)
@@ -101,8 +103,8 @@ async def edit_user(
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
 
 
-@challenges_router.post("/create-challenge1")
-async def create_challenge1(
+@challenges_router.post("/create-challenge")
+async def create_challenge(
     db: db_dependency,
     user: user_dependency,
     challenge_title: Annotated[str, Form()],
@@ -115,8 +117,9 @@ async def create_challenge1(
     parameters: Annotated[str, Form()] = "",
     sorting: Annotated[str, Form()] = "",
     challenge_file: UploadFile = File(...),
+    additional_metrics: Annotated[str, Form()] = "",
 ):
-    # TODO move db methods to their src files and thor exceptions only from
+    # TODO move db methods to their src files and thow exceptions only from
     # endpoints
     await auth.check_user_exists(async_session=db, username=user["username"])
 
@@ -134,64 +137,36 @@ async def create_challenge1(
     if not proper_file_extension:
         raise HTTPException(
             status_code=422,
-            detail=f"File <{challenge_file.filename}> is not a TSV file"
+            detail=f"File <{challenge_file.filename}> is not a TSV file",
         )
 
     await save_expected_file(challenge_file, challenge_title)
 
-    challenge_input_model: ChallengeInputModel = ChallengeInputModel(
+    added_challenge = await add_challenge(
+        async_session=db,
+        username=user.get("username"),
         title=challenge_title,
-        challenge_source=challenge_source,
+        source=challenge_source,
         description=description,
         type=type,
-        main_metric=metric,
-        main_metric_parameters=parameters,
         deadline=deadline,
         award=award,
-        sorting=sorting,
     )
 
-    return await post_create_challenge(
+    created_tests = await add_tests(
         async_session=db,
-        username=user["username"],
-        challenge_file=challenge_file,
-        challenge_input_model=challenge_input_model,
-    )
-
-
-@challenges_router.post("/create-challenge")
-async def create_challenge(
-    db: db_dependency,
-    user: user_dependency,
-    challenge_title: Annotated[str, Form()],
-    challenge_source: Annotated[str, Form()] = "",
-    description: Annotated[str, Form()] = "",
-    deadline: Annotated[str, Form()] = "",
-    award: Annotated[str, Form()] = "",
-    type: Annotated[str, Form()] = "",
-    metric: Annotated[str, Form()] = "",
-    parameters: Annotated[str, Form()] = "",
-    sorting: Annotated[str, Form()] = "",
-    challenge_file: UploadFile = File(...),
-):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    challenge_input_model: ChallengeInputModel = ChallengeInputModel(
-        title=challenge_title,
-        challenge_source=challenge_source,
-        description=description,
-        type=type,
+        challenge=added_challenge.get("challenge_id"),
         main_metric=metric,
         main_metric_parameters=parameters,
-        deadline=deadline,
-        award=award,
-        sorting=sorting,
+        additional_metrics=additional_metrics,
     )
-    return await challenges.create_challenge(
-        async_session=db,
-        username=user["username"],
-        challenge_file=challenge_file,
-        challenge_input_model=challenge_input_model,
-    )
+
+    return {
+        "success": True,
+        "message": "Challenge uploaded successfully",
+        "challenge_title": added_challenge.get("challenge_title"),
+        "main_metric": created_tests.get("test_main_metric"),
+    }
 
 
 @challenges_router.get("/get-challenges")
@@ -237,11 +212,13 @@ async def get_metrics():
     return await evaluation.get_metrics()
 
 
+# TODO change
 @evaluation_router.get("/{challenge}/all-submissions")
 async def get_all_submissions(db: db_dependency, challenge: str):
     return await evaluation.get_all_submissions(async_session=db, challenge=challenge)
 
 
+# TODO change
 @evaluation_router.get("/{challenge}/my-submissions")
 async def get_my_submissions(db: db_dependency, challenge: str, user: user_dependency):
     await auth.check_user_exists(async_session=db, username=user["username"])
@@ -250,9 +227,11 @@ async def get_my_submissions(db: db_dependency, challenge: str, user: user_depen
     )
 
 
+# TODO change
+# TODO sort with regard to sorting in the main metric and timestamp
 @evaluation_router.get("/{challenge}/leaderboard")
 async def get_leaderboard(db: db_dependency, challenge: str):
-    return await evaluation.get_leaderboard(async_session=db, challenge=challenge)
+    return await evaluation.get_leaderboard(async_session=db, challenge_name=challenge)
 
 
 admin_router = APIRouter(prefix="/admin", tags=["admin"])
