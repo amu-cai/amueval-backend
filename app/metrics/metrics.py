@@ -6,65 +6,70 @@ from fastapi import HTTPException
 
 from metrics.metric_base import MetricBase
 from metrics.accuracy import Accuracy
-from metrics.mse import MSE
-from metrics.rmse import RMSE
-from metrics.fbeta import FBeta
-from metrics.recall import Recall
-from metrics.precision import Precision
 from metrics.average_precision import AveragePrecision
 from metrics.balanced_accuracy import BalancedAccuracy
+from metrics.bleu import Bleu
 from metrics.brier import Brier
 from metrics.cohen_kappa import CohenKappa
+from metrics.d2_absolute_error import D2AbsoluteError
+from metrics.d2_pinball import D2Pinball
+from metrics.d2_tweedie import D2Tweedie
 from metrics.dcg import DCG
+from metrics.explained_variance import ExplainedVariance
+from metrics.f1_score import F1
+from metrics.fbeta import FBeta
 from metrics.hamming_loss import HammingLoss
 from metrics.hinge_loss import HingeLoss
 from metrics.log_loss import LogLoss
 from metrics.matthews_correlation import MatthewsCorrelation
-from metrics.ndcg import NDCG
-
-from metrics.explained_variance import ExplainedVariance
-from metrics.median_absolute_error import MedianAbsoluteError
-from metrics.r2 import R2
-from metrics.mean_poisson_deviance import MeanPoissonDeviance
+from metrics.mean_absolute_error import MeanAbsoluteError
+from metrics.mean_absolute_percentage_error import MeanAbsolutePercentageError
 from metrics.mean_gamma_deviance import MeanGammaDeviance
-from metrics.mean_tweedie_deviance import MeanTweedieDeviance
-from metrics.d2_tweedie import D2Tweedie
 from metrics.mean_pinball_loss import MeanPinballLoss
-from metrics.d2_pinball import D2Pinball
-from metrics.d2_absolute_error import D2AbsoluteError
-from metrics.bleu import Bleu
+from metrics.mean_poisson_deviance import MeanPoissonDeviance
+from metrics.mean_tweedie_deviance import MeanTweedieDeviance
+from metrics.median_absolute_error import MedianAbsoluteError
+from metrics.mse import MSE
+from metrics.ndcg import NDCG
+from metrics.precision import Precision
+from metrics.r2 import R2
+from metrics.recall import Recall
+from metrics.rmse import RMSE
 
 
 class Metrics(BaseModel):
     """All available metrics."""
 
     accuracy: MetricBase = Accuracy
-    balanced_accuracy: MetricBase = BalancedAccuracy
-    fbeta_score: MetricBase = FBeta
-    rmse: MetricBase = RMSE
-    mse: MetricBase = MSE
-    recall: MetricBase = Recall
-    precision: MetricBase = Precision
     average_precision: MetricBase = AveragePrecision
+    balanced_accuracy: MetricBase = BalancedAccuracy
+    bleu: MetricBase = Bleu
     brier: MetricBase = Brier
     cohen_kappa: MetricBase = CohenKappa
+    d2_absolute_error: MetricBase = D2AbsoluteError
+    d2_pinball: MetricBase = D2Pinball
+    d2_tweedie: MetricBase = D2Tweedie
     dcg: MetricBase = DCG
+    explained_variance: MetricBase = ExplainedVariance
+    f1_score: MetricBase = F1
+    fbeta_score: MetricBase = FBeta
     hamming_loss: MetricBase = HammingLoss
     hinge_loss: MetricBase = HingeLoss
     log_loss: MetricBase = LogLoss
     matthews_correlation: MetricBase = MatthewsCorrelation
-    ndcg: MetricBase = NDCG
-    explained_variance: MetricBase = ExplainedVariance
-    median_absolute_error: MetricBase = MedianAbsoluteError
-    r2: MetricBase = R2
-    mean_poisson_deviance: MetricBase = MeanPoissonDeviance
+    mean_absolute_error: MetricBase = MeanAbsoluteError
+    mean_absolute_percentage_error: MetricBase = MeanAbsolutePercentageError
     mean_gamma_deviance: MetricBase = MeanGammaDeviance
-    mean_tweedie_deviance: MetricBase = MeanTweedieDeviance
-    d2_tweedie: MetricBase = D2Tweedie
     mean_pinball_loss: MetricBase = MeanPinballLoss
-    d2_pinball: MetricBase = D2Pinball
-    d2_absolute_error: MetricBase = D2AbsoluteError
-    bleu: MetricBase = Bleu
+    mean_poisson_deviance: MetricBase = MeanPoissonDeviance
+    mean_tweedie_deviance: MetricBase = MeanTweedieDeviance
+    median_absolute_error: MetricBase = MedianAbsoluteError
+    mse: MetricBase = MSE
+    ndcg: MetricBase = NDCG
+    precision: MetricBase = Precision
+    r2: MetricBase = R2
+    recall: MetricBase = Recall
+    rmse: MetricBase = RMSE
 
 
 def all_metrics() -> list[str]:
