@@ -119,12 +119,13 @@ async def create_challenge(
     challenge_file: UploadFile = File(...),
     additional_metrics: Annotated[str, Form()] = "",
 ):
-    # TODO move db methods to their src files and thow exceptions only from
+    # TODO: move db methods to their src files and thow exceptions only from
     # endpoints
     await auth.check_user_exists(async_session=db, username=user["username"])
 
     if challenge_title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
     if challenge_exists:
@@ -167,6 +168,48 @@ async def create_challenge(
         "challenge_title": added_challenge.get("challenge_title"),
         "main_metric": created_tests.get("test_main_metric"),
     }
+
+
+@challenges_router.patch("/edit-challenge")
+async def edit_challenge(
+    db: db_dependency,
+    user: user_dependency,
+    challenge_title: Annotated[str, Form()],
+    description: Annotated[str, Form()] = "",
+    deadline: Annotated[str, Form()] = "",
+):
+    user_name = user["username"]
+    await auth.check_user_exists(async_session=db, username=user_name)
+
+    if challenge_title == "":
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
+
+    challenge_exists = await check_challenge_exists(db, challenge_title)
+    if challenge_exists:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Challenge title <{challenge_title}> already exists",
+        )
+
+    challenge_belongs_to_user = await challenges.check_challenge_user(
+        async_sessionmaker=db,
+        challenge_title=challenge_title,
+        username=user_name,
+    )
+    if not challenge_belongs_to_user:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Challenge <{
+                challenge_title}> does not belong to user <{user_name}>",
+        )
+
+    return challenges.edit_challenge(
+        async_session=db,
+        challenge_title=challenge_title,
+        deadline=deadline,
+        description=description,
+    )
 
 
 @challenges_router.get("/get-challenges")
