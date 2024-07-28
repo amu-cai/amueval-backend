@@ -169,15 +169,14 @@ async def get_all_submissions(
             .first()
         )
 
-        main_metric_test = (
-            (
-                await session.execute(
-                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
-                )
-            )
+        tests = (
+            (await session.execute(select(Test).filter_by(challenge=challenge.id)))
             .scalars()
-            .first()
+            .all()
         )
+
+        main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
+        additional_metrics_tests = filter(lambda x: x.main_metric is False, tests)
 
         submissions = (
             (
@@ -190,27 +189,46 @@ async def get_all_submissions(
         )
 
         for submission in submissions:
-            evaluation = (
+            evaluations_all = (
                 (
                     await session.execute(
-                        select(Evaluation).filter_by(
-                            submission=submission.id, test=main_metric_test.id
-                        )
+                        select(Evaluation).filter_by(submission=submission.id)
                     )
                 )
                 .scalars()
-                .first()
+                .all()
             )
 
-            if evaluation is not None:
+            evaluation_main_metric = next(
+                filter(lambda x: x.test == main_metric_test.id, evaluations_all)
+            )
+
+            evaluations_additional_metrics = []
+            for evaluation in evaluations_all:
+                additional_test = next(
+                    (
+                        test
+                        for test in additional_metrics_tests
+                        if test.id == evaluation.test
+                    ),
+                    None,
+                )
+
+                if additional_test is not None:
+                    evaluations_additional_metrics.append(
+                        additional_test.metric, evaluation.score
+                    )
+
+            if evaluation_main_metric is not None:
                 results.append(
-                    {
-                        "id": submission.id,
-                        "submitter": submission.submitter,
-                        "description": submission.description,
-                        "timestamp": submission.timestamp,
-                        "main_metric_result": evaluation.score,
-                    }
+                    dict(
+                        id=submission.id,
+                        submitter=submission.submitter,
+                        description=submission.description,
+                        timestamp=submission.timestamp,
+                        main_metric_result=evaluation_main_metric.score,
+                        additional_metrics_results=evaluations_additional_metrics,
+                    )
                 )
 
     sorted_result = sorted(
