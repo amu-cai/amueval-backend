@@ -1,6 +1,6 @@
 import os
 
-from database.models import Challenge, Test, Evaluation
+from database.models import Challenge, Test, Evaluation, Submission
 
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
@@ -39,6 +39,20 @@ async def all_challenges(
                 .one()
             )
 
+            submissions = (
+                (
+                    await session.execute(
+                        select(Submission).filter_by(challenge=challenge.id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+
+            participants = len(
+                set([submission.submitter for submission in submissions])
+            )
+
             try:
                 scores = (
                     await session.execute(select(Evaluation).filter_by(test=test.id))
@@ -62,6 +76,7 @@ async def all_challenges(
                     "deleted": challenge.deleted,
                     # TODO: change to sorting from the metric
                     "sorting": "descending",
+                    "participants": participants,
                 }
             )
         else:
@@ -78,6 +93,7 @@ async def all_challenges(
                     "deleted": challenge.deleted,
                     # TODO: change to sorting from the metric
                     "sorting": "descending",
+                    "participants": participants,
                 }
             )
 
@@ -100,6 +116,20 @@ async def get_challenge_info(async_session, challenge: str):
             )
             .scalars()
             .one()
+        )
+
+        submissions = (
+            (
+                await session.execute(
+                    select(Submission).filter_by(challenge=challenge.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        participants = len(
+            set([submission.submitter for submission in submissions])
         )
 
         sorted_evaluations = (
@@ -125,4 +155,5 @@ async def get_challenge_info(async_session, challenge: str):
         "deleted": challenge.deleted,
         # TODO: change to sorting from the metric
         "sorting": "descending",
+        "participants": participants,
     }
