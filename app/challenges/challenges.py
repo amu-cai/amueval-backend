@@ -1,6 +1,6 @@
 import os
 
-from database.models import Challenge, Test, Evaluation, Submission
+from database.models import Challenge, Test, Evaluation, Submission, User
 
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
@@ -32,7 +32,8 @@ async def all_challenges(
             test = (
                 (
                     await session.execute(
-                        select(Test).filter_by(challenge=challenge.id, main_metric=True)
+                        select(Test).filter_by(
+                            challenge=challenge.id, main_metric=True)
                     )
                 )
                 .scalars()
@@ -111,7 +112,8 @@ async def get_challenge_info(async_session, challenge: str):
         test = (
             (
                 await session.execute(
-                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
+                    select(Test).filter_by(
+                        challenge=challenge.id, main_metric=True)
                 )
             )
             .scalars()
@@ -128,7 +130,8 @@ async def get_challenge_info(async_session, challenge: str):
             .all()
         )
 
-        participants = len(set([submission.submitter for submission in submissions]))
+        participants = len(
+            set([submission.submitter for submission in submissions]))
 
         sorted_evaluations = (
             (await session.execute(select(Evaluation).filter_by(test=test.id)))
@@ -155,3 +158,45 @@ async def get_challenge_info(async_session, challenge: str):
         "sorting": "descending",
         "participants": participants,
     }
+
+
+async def check_challenge_user(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_title: str,
+    user_name: str,
+) -> bool:
+    async with async_sessionmaker as session:
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=challenge_title)))
+            .scalars()
+            .one()
+        )
+
+        user = (
+            (await session.execute(select(User).filter_by(username=user_name)))
+            .scalars()
+            .one()
+        )
+
+        result = challenge.author == user.id
+
+    return result
+
+
+async def edit_challenge(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_title: str,
+    deadline: str,
+    description: str,
+) -> dict:
+    async with async_sessionmaker as session:
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=challenge_title)))
+            .scalars()
+            .one()
+        )
+
+        challenge.deadline = deadline
+        challenge.description = description
+
+    return dict(success=True, message=f"Challenge {challenge_title} updated")
