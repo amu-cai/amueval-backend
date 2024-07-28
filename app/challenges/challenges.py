@@ -128,9 +128,7 @@ async def get_challenge_info(async_session, challenge: str):
             .all()
         )
 
-        participants = len(
-            set([submission.submitter for submission in submissions])
-        )
+        participants = len(set([submission.submitter for submission in submissions]))
 
         sorted_evaluations = (
             (await session.execute(select(Evaluation).filter_by(test=test.id)))
