@@ -32,8 +32,7 @@ async def all_challenges(
             test = (
                 (
                     await session.execute(
-                        select(Test).filter_by(
-                            challenge=challenge.id, main_metric=True)
+                        select(Test).filter_by(challenge=challenge.id, main_metric=True)
                     )
                 )
                 .scalars()
@@ -109,16 +108,19 @@ async def get_challenge_info(async_session, challenge: str):
             .one()
         )
 
-        test = (
+        tests = (
             (
                 await session.execute(
-                    select(Test).filter_by(
-                        challenge=challenge.id, main_metric=True)
+                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
                 )
             )
             .scalars()
-            .one()
+            .all()
         )
+
+        main_test = next(filter(lambda x: x.main_metric, tests))
+
+        additional_metrics = [test.metric for test in tests if not test.main_metric]
 
         submissions = (
             (
@@ -130,11 +132,10 @@ async def get_challenge_info(async_session, challenge: str):
             .all()
         )
 
-        participants = len(
-            set([submission.submitter for submission in submissions]))
+        participants = len(set([submission.submitter for submission in submissions]))
 
         sorted_evaluations = (
-            (await session.execute(select(Evaluation).filter_by(test=test.id)))
+            (await session.execute(select(Evaluation).filter_by(test=main_test.id)))
             .scalars()
             .all()
         ).sort(key=lambda x: x.score, reverse=True)
@@ -146,8 +147,8 @@ async def get_challenge_info(async_session, challenge: str):
         "title": challenge.title,
         "author": challenge.author,
         "type": challenge.type,
-        "mainMetric": test.metric,
-        "mainMetricParameters": test.metric_parameters,
+        "mainMetric": main_test.metric,
+        "mainMetricParameters": main_test.metric_parameters,
         "description": challenge.description,
         "source": challenge.source,
         "bestScore": best_score,
@@ -157,6 +158,7 @@ async def get_challenge_info(async_session, challenge: str):
         # TODO: change to sorting from the metric
         "sorting": "descending",
         "participants": participants,
+        "additional_metrics": additional_metrics,
     }
 
 

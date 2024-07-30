@@ -174,8 +174,7 @@ async def get_all_submissions(
         )
 
         main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
-        additional_metrics_tests = filter(
-            lambda x: x.main_metric is False, tests)
+        additional_metrics_tests = filter(lambda x: x.main_metric is False, tests)
 
         submissions = (
             (
@@ -279,8 +278,7 @@ async def get_leaderboard(
         test = (
             (
                 await session.execute(
-                    select(Test).filter_by(
-                        challenge=challenge.id, main_metric=True)
+                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
                 )
             )
             .scalars()
@@ -305,8 +303,7 @@ async def get_leaderboard(
 
     # TODO: change to sorting from the metric
     sorting = "descending"
-    submitters = list(
-        set([submission.submitter for submission in submissions]))
+    submitters = list(set([submission.submitter for submission in submissions]))
 
     result = []
     for submitter in submitters:
@@ -338,8 +335,7 @@ async def get_leaderboard(
                     "id": best_result_evaluation.submission,
                     "submitter": submitter,
                     "description": best_result_submission.description,
-                    "dev_result": best_result_evaluation.score,
-                    "test_result": best_result_evaluation.score,
+                    "main_metric_result": best_result_evaluation.score,
                     "timestamp": best_result_submission.timestamp,
                 }
             )
