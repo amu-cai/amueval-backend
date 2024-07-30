@@ -1,6 +1,5 @@
 import os
 import json
-import evaluation.evaluation_helper as evaluation_helper
 
 from datetime import datetime
 from fastapi import UploadFile, File, HTTPException
@@ -38,8 +37,7 @@ async def submit(
     challenge_title: str,
     submission_file: UploadFile = File(...),
 ):
-    submitter = evaluation_helper.check_submitter(username)
-    description = evaluation_helper.check_description(description)
+    submitter = username
     check_file_extension(submission_file, "tsv")
 
     async with async_session as session:
@@ -176,7 +174,8 @@ async def get_all_submissions(
         )
 
         main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
-        additional_metrics_tests = filter(lambda x: x.main_metric is False, tests)
+        additional_metrics_tests = filter(
+            lambda x: x.main_metric is False, tests)
 
         submissions = (
             (
@@ -280,7 +279,8 @@ async def get_leaderboard(
         test = (
             (
                 await session.execute(
-                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
+                    select(Test).filter_by(
+                        challenge=challenge.id, main_metric=True)
                 )
             )
             .scalars()
@@ -305,7 +305,8 @@ async def get_leaderboard(
 
     # TODO: change to sorting from the metric
     sorting = "descending"
-    submitters = list(set([submission.submitter for submission in submissions]))
+    submitters = list(
+        set([submission.submitter for submission in submissions]))
 
     result = []
     for submitter in submitters:
