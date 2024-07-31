@@ -119,9 +119,12 @@ def calculate_metric(
         metric_params = metric.model_fields.keys()
 
         if set(params.keys()).issubset(set(metric_params)):
-            return metric(**params).calculate(expected, out)
+            return metric().calculate(expected, out)
+            # TODO: make 'None' to render to None in order for parameters to work
+            # return metric(**params).calculate(expected, out)
         else:
-            detail_info = f"Metric {metric_name} has the following params: {metric_params} and you gave those: {params}"
+            detail_info = f"Metric {metric_name} has the following params: {
+                metric_params} and you gave those: {params}"
             raise HTTPException(status_code=422, detail=detail_info)
 
 
@@ -142,5 +145,6 @@ def str2metric(str_metric: str) -> MetricBase:
         if set(params.keys()).issubset(set(metric_params)):
             return metric(**params)
         else:
-            detail_info = f"Metric {metric_name} has the following params: {metric_params} and you gave those: {params}"
+            detail_info = f"Metric {metric_name} has the following params: {
+                metric_params} and you gave those: {params}"
             raise HTTPException(status_code=422, detail=detail_info)
