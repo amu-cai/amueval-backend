@@ -15,10 +15,11 @@ async def add_tests(
     main_metric_parameters: str,
     additional_metrics: str,
 ) -> dict:
+    main_metric_parameters_json = json.loads(main_metric_parameters)
     test_model_main = Test(
         challenge=challenge,
         metric=main_metric,
-        metric_parameters=main_metric_parameters,
+        metric_parameters=json.dumps(main_metric_parameters_json),
         main_metric=True,
         active=True,
     )
@@ -32,7 +33,7 @@ async def add_tests(
                 test_model = Test(
                     challenge=challenge,
                     metric=metric["name"],
-                    metric_parameters=metric["params"],
+                    metric_parameters=json.dumps(metric["params"]),
                     main_metric=False,
                     active=True,
                 )
