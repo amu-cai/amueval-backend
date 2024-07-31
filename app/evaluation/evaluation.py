@@ -174,8 +174,8 @@ async def get_all_submissions(
         )
 
         main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
-        additional_metrics_tests = filter(
-            lambda x: x.main_metric is False, tests)
+        additional_metrics_tests = [
+            test for test in tests if not test.main_metric]
 
         submissions = (
             (
@@ -212,10 +212,12 @@ async def get_all_submissions(
                     ),
                     None,
                 )
-
                 if additional_test is not None:
                     evaluations_additional_metrics.append(
-                        additional_test.metric, evaluation.score
+                        dict(
+                            name=additional_test.metric,
+                            score=evaluation.score,
+                        )
                     )
 
             if evaluation_main_metric is not None:
