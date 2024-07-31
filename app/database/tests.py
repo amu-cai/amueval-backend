@@ -32,7 +32,7 @@ async def add_tests(
                 test_model = Test(
                     challenge=challenge,
                     metric=metric["name"],
-                    metric_parameters=metric["params"],
+                    metric_parameters=json.dumps(metric["params"]),
                     main_metric=False,
                     active=True,
                 )
