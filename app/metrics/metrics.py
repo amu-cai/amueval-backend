@@ -117,6 +117,7 @@ def calculate_metric(
     else:
         metric = getattr(Metrics(), metric_name)
         metric_params = metric.model_fields.keys()
+        params = dict()
 
         if set(params.keys()).issubset(set(metric_params)):
             return metric().calculate(expected, out)
