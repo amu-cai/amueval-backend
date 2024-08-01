@@ -347,7 +347,7 @@ async def get_leaderboard(
             )
 
     result = sorted(
-        result, key=lambda d: d["main_metric_result"], reverse=(sorting == "ascending")
+        result, key=lambda d: d["main_metric_result"], reverse=(sorting == "descending")
     )
 
     return result
