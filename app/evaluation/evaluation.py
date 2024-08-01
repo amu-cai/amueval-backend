@@ -76,13 +76,22 @@ async def submit(
     expected_file = open(
         f"{challenges_dir}/{challenge_name}.tsv",
         "r",
-    )
-    expected_results = [float(line) for line in expected_file.readlines()]
+    ).readlines()
 
-    submission_results = [
-        float(line.strip())
-        for line in (await submission_file.read()).decode("utf-8").splitlines()
-    ]
+    try:
+        expected_results = [float(line) for line in expected_file]
+
+        submission_results = [
+            float(line)
+            for line in (await submission_file.read()).decode("utf-8").splitlines()
+        ]
+    except ValueError:
+        expected_results = [line.strip() for line in expected_file]
+
+        submission_results = [
+            line.strip()
+            for line in (await submission_file.read()).decode("utf-8").splitlines()
+        ]
 
     async with async_session as session:
         submission = Submission(
