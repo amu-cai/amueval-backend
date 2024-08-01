@@ -14,7 +14,7 @@ class Recall(MetricBase):
         The set of labels.
     pos_label : int | float | bool | str, default 1
         The class to report if average='binary' and the data is binary.
-    average : str | None, default 'bianry'
+    average : str | None, default 'binary'
         This parameter is required for multiclass/multilabel targets. Values:
         ‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’ or None.
     sample_weight : list[Any] | None, default None
@@ -26,7 +26,7 @@ class Recall(MetricBase):
 
     labels: list[Any] | None = None
     pos_label: int | float | bool | str = 1
-    average: str | None = "bianry"
+    average: str | None = "binary"
     sample_weight: list[Any] | None = None
     zero_division: str | float = "warn"
 
