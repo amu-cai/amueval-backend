@@ -306,7 +306,7 @@ async def get_leaderboard(
         )
 
     # TODO: change to sorting from the metric
-    sorting = "descending"
+    sorting = "ascending"
     submitters = list(
         set([submission.submitter for submission in submissions]))
 
@@ -325,6 +325,7 @@ async def get_leaderboard(
                 if evaluation.submission in submitter_submissions
             ],
             key=lambda x: x.score,
+            reverse=True,
         )
 
         if sorted_submitter_evaluations:
@@ -346,7 +347,7 @@ async def get_leaderboard(
             )
 
     result = sorted(
-        result, key=lambda d: d["main_metric_result"], reverse=(sorting == "descending")
+        result, key=lambda d: d["main_metric_result"], reverse=(sorting == "ascending")
     )
 
     return result
