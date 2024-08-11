@@ -1,4 +1,5 @@
 import os
+import json
 
 from database.models import Challenge, Test, Evaluation, Submission, User
 
@@ -163,7 +164,7 @@ async def check_challenge_user(
     challenge_title: str,
     user_name: str,
 ) -> bool:
-    async with async_sessionmaker as session:
+    async with async_session as session:
         challenge = (
             (await session.execute(select(Challenge).filter_by(title=challenge_title)))
             .scalars()
@@ -176,7 +177,7 @@ async def check_challenge_user(
             .one()
         )
 
-        result = challenge.author == user.id
+        result = challenge.author == user.username
 
     return result
 
@@ -187,7 +188,7 @@ async def edit_challenge(
     deadline: str,
     description: str,
 ) -> dict:
-    async with async_sessionmaker as session:
+    async with async_session as session:
         challenge = (
             (await session.execute(select(Challenge).filter_by(title=challenge_title)))
             .scalars()
@@ -196,5 +197,7 @@ async def edit_challenge(
 
         challenge.deadline = deadline
         challenge.description = description
+
+        await session.commit()
 
     return dict(success=True, message=f"Challenge {challenge_title} updated")
