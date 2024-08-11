@@ -169,7 +169,7 @@ async def create_challenge(
     }
 
 
-@challenges_router.patch("/edit-challenge")
+@challenges_router.put("/edit-challenge")
 async def edit_challenge(
     db: db_dependency,
     user: user_dependency,
@@ -184,16 +184,16 @@ async def edit_challenge(
         raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
-    if challenge_exists:
+    if not challenge_exists:
         raise HTTPException(
             status_code=422,
-            detail=f"Challenge title <{challenge_title}> already exists",
+            detail=f"Challenge title <{challenge_title}> does not exist",
         )
 
     challenge_belongs_to_user = await challenges.check_challenge_user(
-        async_sessionmaker=db,
+        async_session=db,
         challenge_title=challenge_title,
-        username=user_name,
+        user_name=user_name,
     )
     if not challenge_belongs_to_user:
         raise HTTPException(
@@ -202,7 +202,7 @@ async def edit_challenge(
                 challenge_title}> does not belong to user <{user_name}>",
         )
 
-    return challenges.edit_challenge(
+    return await challenges.edit_challenge(
         async_session=db,
         challenge_title=challenge_title,
         deadline=deadline,
