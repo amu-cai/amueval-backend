@@ -32,8 +32,7 @@ async def all_challenges(
             test = (
                 (
                     await session.execute(
-                        select(Test).filter_by(
-                            challenge=challenge.id, main_metric=True)
+                        select(Test).filter_by(challenge=challenge.id, main_metric=True)
                     )
                 )
                 .scalars()
@@ -110,20 +109,14 @@ async def get_challenge_info(async_session, challenge: str):
         )
 
         tests = (
-            (
-                await session.execute(
-                    select(Test).filter_by(
-                        challenge=challenge.id)
-                )
-            )
+            (await session.execute(select(Test).filter_by(challenge=challenge.id)))
             .scalars()
             .all()
         )
 
         main_test = next(filter(lambda x: x.main_metric, tests))
 
-        additional_metrics = [
-            test.metric for test in tests if not test.main_metric]
+        additional_metrics = [test.metric for test in tests if not test.main_metric]
 
         submissions = (
             (
@@ -135,8 +128,7 @@ async def get_challenge_info(async_session, challenge: str):
             .all()
         )
 
-        participants = len(
-            set([submission.submitter for submission in submissions]))
+        participants = len(set([submission.submitter for submission in submissions]))
 
         sorted_evaluations = (
             (await session.execute(select(Evaluation).filter_by(test=main_test.id)))

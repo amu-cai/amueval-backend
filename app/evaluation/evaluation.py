@@ -183,8 +183,7 @@ async def get_all_submissions(
         )
 
         main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
-        additional_metrics_tests = [
-            test for test in tests if not test.main_metric]
+        additional_metrics_tests = [test for test in tests if not test.main_metric]
 
         submissions = (
             (
@@ -230,10 +229,20 @@ async def get_all_submissions(
                     )
 
             if evaluation_main_metric is not None:
+                submitter = (
+                    (
+                        await session.execute(
+                            select(User).filter_by(id=submission.submitter)
+                        )
+                    )
+                    .scalars()
+                    .first()
+                )
+
                 results.append(
                     dict(
                         id=submission.id,
-                        submitter=submission.submitter,
+                        submitter=submitter.username,
                         description=submission.description,
                         timestamp=submission.timestamp,
                         main_metric_result=evaluation_main_metric.score,
@@ -290,8 +299,7 @@ async def get_leaderboard(
         test = (
             (
                 await session.execute(
-                    select(Test).filter_by(
-                        challenge=challenge.id, main_metric=True)
+                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
                 )
             )
             .scalars()
@@ -314,17 +322,29 @@ async def get_leaderboard(
             .all()
         )
 
+        submitters_ids = set([submission.submitter for submission in submissions])
+        submitters = []
+        for submitter_id in submitters_ids:
+            submitters.append(
+                dict(
+                    id=submitter_id,
+                    name=(
+                        (await session.execute(select(User).filter_by(id=submitter_id)))
+                        .scalars()
+                        .first()
+                    ).username,
+                )
+            )
+
     # TODO: change to sorting from the metric
     sorting = "ascending"
-    submitters = list(
-        set([submission.submitter for submission in submissions]))
 
     result = []
     for submitter in submitters:
         submitter_submissions = [
             submission.id
             for submission in submissions
-            if submission.submitter == submitter
+            if submission.submitter == submitter.get("id")
         ]
 
         sorted_submitter_evaluations = sorted(
@@ -348,15 +368,13 @@ async def get_leaderboard(
             result.append(
                 {
                     "id": best_result_evaluation.submission,
-                    "submitter": submitter,
+                    "submitter": submitter.get("name"),
                     "description": best_result_submission.description,
                     "main_metric_result": best_result_evaluation.score,
                     "timestamp": best_result_submission.timestamp,
                 }
             )
 
-    result = sorted(
-        result, key=lambda d: d["main_metric_result"], reverse=True
-    )
+    result = sorted(result, key=lambda d: d["main_metric_result"], reverse=True)
 
     return result
