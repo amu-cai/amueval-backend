@@ -71,18 +71,13 @@ async def delete_challenge(
             .scalars()
             .one()
         )
-        new_challenge_title = (
-            f"{challenge.title}{SAVE_SEPARATOR}{token_hex(5)}{SAVE_SEPARATOR}DELETED"
-        )
-        shutil.move(
-            f"{challenges_dir}/{challenge_title}",
-            f"{deleted_challenges_dir}/{new_challenge_title}",
-        )
-        challenge.title = new_challenge_title
+
         challenge.deleted = True
+
         await session.commit()
-    return {
-        "success": True,
-        "challenge": challenge_title,
-        "message": "Challenge deleted",
-    }
+
+    return dict(
+        success=True,
+        challenge=challenge_title,
+        message="Challenge deleted",
+    )

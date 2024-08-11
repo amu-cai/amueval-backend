@@ -86,6 +86,7 @@ async def check_user_is_admin(
             .scalars()
             .one()
         )
+
     if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -148,7 +149,8 @@ async def create_user(
     if email_already_exist:
         raise HTTPException(
             status_code=422,
-            detail=f"Account with email {create_user_request.email} already exist!",
+            detail=f"Account with email {
+                create_user_request.email} already exist!",
         )
 
     if not valid_username(create_user_request.username):
