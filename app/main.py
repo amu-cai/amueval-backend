@@ -304,9 +304,15 @@ async def user_rights_update(
 async def delete_challenge(
     db: db_dependency, user: user_dependency, challenge_title: str
 ):
-    await auth.check_user_exists(async_session=db, username=user["username"])
     await auth.check_user_is_admin(async_session=db, username=user["username"])
-    await check_challenge_exists(async_session=db, title=challenge_title)
+
+    challenge_exists = await check_challenge_exists(db, challenge_title)
+    if not challenge_exists:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Challenge title <{challenge_title}> does not exist",
+        )
+
     return await admin.delete_challenge(
         async_session=db, challenge_title=challenge_title
     )
