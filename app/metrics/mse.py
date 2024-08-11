@@ -15,10 +15,13 @@ class MSE(MetricBase):
     multioutput : str | list[Any], default 'uniform_average'
         Defines aggregating of multiple output values. Values: ‘raw_values’,
         ‘uniform_average’.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
     multioutput: str | list[Any] = "uniform_average"
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {

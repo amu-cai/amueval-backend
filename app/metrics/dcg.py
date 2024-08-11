@@ -19,12 +19,15 @@ class DCG(MetricBase):
         Sample weights.
     ignore_ties : bool, default False
         Assume that there are no ties in expected.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     k: int | None = None
     log_base: float = 2.0
     sample_weight: list[Any] | None = None
     ignore_ties: bool = False
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {
@@ -38,7 +41,8 @@ class DCG(MetricBase):
                     "data_type": "list[Any] | None",
                     "default_value": "None",
                 },
-                {"name": "ignore_ties", "data_type": "bool", "default_value": "False"},
+                {"name": "ignore_ties", "data_type": "bool",
+                    "default_value": "False"},
             ],
         }
 

@@ -1,6 +1,6 @@
+from fastapi import HTTPException
 from sklearn import metrics as sk_metrics
 from typing import Any
-from fastapi import HTTPException
 
 from metrics.metric_base import MetricBase
 
@@ -17,11 +17,14 @@ class CohenKappa(MetricBase):
         Weighting type to calculate the score. Values: 'linear', 'quadratic'.
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     labels: list[Any] | None = None
     weights: str | None = None
     sample_weight: list[Any] | None = None
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {

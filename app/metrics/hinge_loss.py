@@ -14,10 +14,13 @@ class HingeLoss(MetricBase):
         Contains all the labels for the problem. Used in multiclass hinge loss.
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     labels: list[Any] | None = None
     sample_weight: list[Any] | None = None
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {

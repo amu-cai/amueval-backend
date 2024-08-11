@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sklearn import metrics as sk_metrics
 from typing import Any
 
@@ -12,9 +13,12 @@ class MeanPoissonDeviance(MetricBase):
     ----------
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {
@@ -55,4 +59,7 @@ class MeanPoissonDeviance(MetricBase):
                 sample_weight=self.sample_weight,
             )
         except Exception as e:
-            print(f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

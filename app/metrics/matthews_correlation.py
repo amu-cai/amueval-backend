@@ -12,9 +12,12 @@ class MatthewsCorrelation(MetricBase):
     ----------
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {

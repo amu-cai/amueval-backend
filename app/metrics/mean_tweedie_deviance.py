@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sklearn import metrics as sk_metrics
 from typing import Any
 
@@ -16,10 +17,13 @@ class MeanTweedieDeviance(MetricBase):
         Tweedie power parameter. Either power <= 0 or power >= 1. The higher
         power the less weight is given to extreme deviations between true and
         predicted targets.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
     power: float = 0.0
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {
@@ -62,4 +66,7 @@ class MeanTweedieDeviance(MetricBase):
                 power=self.power,
             )
         except Exception as e:
-            print(f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )
