@@ -37,8 +37,7 @@ class NDCG(MetricBase):
                     "data_type": "list[Any] | None",
                     "default_value": "None",
                 },
-                {"name": "ignore_ties", "data_type": "bool",
-                    "default_value": "False"},
+                {"name": "ignore_ties", "data_type": "bool", "default_value": "False"},
             ],
         }
 

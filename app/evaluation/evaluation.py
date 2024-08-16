@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from metrics.metrics import (
+    Metrics,
     metric_info,
     calculate_metric,
     all_metrics,
@@ -61,6 +62,7 @@ async def submit(
 
     challenge_name = challenge.title
 
+    # TODO: move to be checked ealier
     if challenge.deadline != "":
         if (
             datetime.strptime(challenge.deadline[:19], "%Y-%m-%dT%H:%M:%S")
@@ -250,11 +252,12 @@ async def get_all_submissions(
                     )
                 )
 
+    main_metric = getattr(Metrics(), main_metric_test.metric)
+    sorting = main_metric().sorting
     sorted_result = sorted(
         results,
         key=lambda d: d["main_metric_result"],
-        # TODO: change to sorting from the metric
-        reverse=("descending"),
+        reverse=(sorting != "descending"),
     )
 
     return sorted_result
@@ -296,7 +299,7 @@ async def get_leaderboard(
             .first()
         )
 
-        test = (
+        main_metric_test = (
             (
                 await session.execute(
                     select(Test).filter_by(challenge=challenge.id, main_metric=True)
@@ -307,7 +310,11 @@ async def get_leaderboard(
         )
 
         evaluations = (
-            (await session.execute(select(Evaluation).filter_by(test=test.id)))
+            (
+                await session.execute(
+                    select(Evaluation).filter_by(test=main_metric_test.id)
+                )
+            )
             .scalars()
             .all()
         )
@@ -336,8 +343,8 @@ async def get_leaderboard(
                 )
             )
 
-    # TODO: change to sorting from the metric
-    sorting = "ascending"
+    main_metric = getattr(Metrics(), main_metric_test.metric)
+    sorting = main_metric().sorting
 
     result = []
     for submitter in submitters:
@@ -354,7 +361,7 @@ async def get_leaderboard(
                 if evaluation.submission in submitter_submissions
             ],
             key=lambda x: x.score,
-            reverse=True,
+            reverse=(sorting != "descending"),
         )
 
         if sorted_submitter_evaluations:
@@ -375,6 +382,8 @@ async def get_leaderboard(
                 }
             )
 
-    result = sorted(result, key=lambda d: d["main_metric_result"], reverse=True)
+    result = sorted(
+        result, key=lambda d: d["main_metric_result"], reverse=(sorting != "descending")
+    )
 
     return result
