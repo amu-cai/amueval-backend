@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sklearn import metrics as sk_metrics
 from typing import Any
 
@@ -19,11 +20,14 @@ class ExplainedVariance(MetricBase):
         Flag indicating if NaN and -Inf scores resulting from constant data
         should be replaced with real numbers (1.0 if prediction is perfect,
         0.0 otherwise).
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
     multioutput: str | list[Any] = "uniform_average"
     force_finite: bool = True
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {
@@ -73,4 +77,7 @@ class ExplainedVariance(MetricBase):
                 force_finite=self.force_finite,
             )
         except Exception as e:
-            print(f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

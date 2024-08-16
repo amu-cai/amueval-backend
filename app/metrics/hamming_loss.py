@@ -12,9 +12,12 @@ class HammingLoss(MetricBase):
     ----------
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {

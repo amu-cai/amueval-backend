@@ -22,6 +22,8 @@ class Precision(MetricBase):
     zero_division : str | float | np.NaN, default 'warn'
         Sets the value to return when there is a zero division, i.e. when all
         predictions and labels are negative. Values: “warn”, 0.0, 1.0, np.nan.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     labels: list[Any] | None = None
@@ -29,6 +31,7 @@ class Precision(MetricBase):
     average: str | None = "binary"
     sample_weight: list[Any] | None = None
     zero_division: str | float = "warn"
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {

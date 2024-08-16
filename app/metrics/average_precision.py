@@ -17,11 +17,14 @@ class AveragePrecision(MetricBase):
         ‘micro’, ‘macro’, ‘samples’, ‘weighted’ or None.
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     pos_label: int | float | bool | str = 1
     average: str | None = "macro"
     sample_weight: list[Any] | None = None
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {

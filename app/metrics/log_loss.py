@@ -20,12 +20,15 @@ class LogLoss(MetricBase):
         Sample weights.
     labels : list[Any] | None, default None
         If not provided, labels will be inferred from expected.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     eps: float | str = "auto"
     normalize: bool = True
     sample_weight: list[Any] | None = None
     labels: list[Any] | None = None
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {

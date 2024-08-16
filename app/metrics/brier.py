@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sklearn import metrics as sk_metrics
 from typing import Any
 
@@ -14,10 +15,13 @@ class Brier(MetricBase):
         Label of the positive class.
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
 
     pos_label: int | float | bool | str | None = None
     sample_weight: list[Any] | None = None
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {

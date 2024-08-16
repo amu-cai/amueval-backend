@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sklearn import metrics as sk_metrics
 from typing import Any
 
@@ -18,11 +19,14 @@ class D2Pinball(MetricBase):
     multioutput : str | list[Any], default 'uniform_average'
         Defines aggregating of multiple output scores. Values: 'raw_values',
         'uniform_average'.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     sample_weight: list[Any] | None = None
     alpha: float = 0.5
     multioutput: str | list[Any] = "uniform_average"
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {
@@ -72,4 +76,7 @@ class D2Pinball(MetricBase):
                 multioutput=self.multioutput,
             )
         except Exception as e:
-            print(f"Could not calculate score because of error: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not calculate score because of error: {e}",
+            )

@@ -1,7 +1,7 @@
 import os
-import json
 
 from database.models import Challenge, Test, Evaluation, Submission, User
+from metrics.metrics import Metrics
 
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
@@ -25,16 +25,19 @@ async def all_challenges(
     async_session: async_sessionmaker[AsyncSession],
 ) -> list[Challenge]:
     async with async_session as session:
-        challenges = (await session.execute(select(Challenge).filter_by(deleted=False))).scalars().all()
+        challenges = (
+            (await session.execute(select(Challenge).filter_by(deleted=False)))
+            .scalars()
+            .all()
+        )
 
     result = []
     for challenge in challenges:
         async with async_session as session:
-            test = (
+            main_test = (
                 (
                     await session.execute(
-                        select(Test).filter_by(
-                            challenge=challenge.id, main_metric=True)
+                        select(Test).filter_by(challenge=challenge.id, main_metric=True)
                     )
                 )
                 .scalars()
@@ -55,49 +58,37 @@ async def all_challenges(
                 set([submission.submitter for submission in submissions])
             )
 
+            main_metric = getattr(Metrics(), main_test.metric)
+            sorting = main_metric().sorting
+
             try:
                 scores = (
-                    await session.execute(select(Evaluation).filter_by(test=test.id))
+                    await session.execute(
+                        select(Evaluation).filter_by(test=main_test.id)
+                    )
                 ).scalars()
-                sorted_scores = sorted(scores, key=lambda x: x.score)
-                best_score = sorted_scores[0] if sorted_scores else None
+                sorted_scores = sorted(
+                    scores, key=lambda x: x.score, reverse=(sorting != "descending")
+                )
+                best_score = sorted_scores[0] if sorted_scores else "No best score yet"
             except NoResultFound:
-                best_score = None
+                best_score = "No best score yet"
 
-        if best_score is not None:
-            result.append(
-                {
-                    "id": challenge.id,
-                    "title": challenge.title,
-                    "type": challenge.type,
-                    "description": challenge.description,
-                    "main_metric": test.metric,
-                    "best_sore": best_score,
-                    "deadline": challenge.deadline,
-                    "award": challenge.award,
-                    "deleted": challenge.deleted,
-                    # TODO: change to sorting from the metric
-                    "sorting": "descending",
-                    "participants": participants,
-                }
-            )
-        else:
-            result.append(
-                {
-                    "id": challenge.id,
-                    "title": challenge.title,
-                    "type": challenge.type,
-                    "description": challenge.description,
-                    "main_metric": test.metric,
-                    "best_sore": "No best score yet",
-                    "deadline": challenge.deadline,
-                    "award": challenge.award,
-                    "deleted": challenge.deleted,
-                    # TODO: change to sorting from the metric
-                    "sorting": "descending",
-                    "participants": participants,
-                }
-            )
+        result.append(
+            {
+                "id": challenge.id,
+                "title": challenge.title,
+                "type": challenge.type,
+                "description": challenge.description,
+                "main_metric": main_test.metric,
+                "best_sore": best_score,
+                "deadline": challenge.deadline,
+                "award": challenge.award,
+                "deleted": challenge.deleted,
+                "sorting": sorting,
+                "participants": participants,
+            }
+        )
 
     return result
 
@@ -118,8 +109,7 @@ async def get_challenge_info(async_session, challenge: str):
 
         main_test = next(filter(lambda x: x.main_metric, tests))
 
-        additional_metrics = [
-            test.metric for test in tests if not test.main_metric]
+        additional_metrics = [test.metric for test in tests if not test.main_metric]
 
         submissions = (
             (
@@ -131,8 +121,7 @@ async def get_challenge_info(async_session, challenge: str):
             .all()
         )
 
-        participants = len(
-            set([submission.submitter for submission in submissions]))
+        participants = len(set([submission.submitter for submission in submissions]))
 
         sorted_evaluations = (
             (await session.execute(select(Evaluation).filter_by(test=main_test.id)))
@@ -140,7 +129,10 @@ async def get_challenge_info(async_session, challenge: str):
             .all()
         ).sort(key=lambda x: x.score, reverse=True)
 
-    best_score = sorted_evaluations[0] if sorted_evaluations else None
+    best_score = sorted_evaluations[0] if sorted_evaluations else "No best score yet"
+
+    main_metric = getattr(Metrics(), main_test.metric)
+    sorting = main_metric().sorting
 
     return {
         "id": challenge.id,
@@ -155,8 +147,7 @@ async def get_challenge_info(async_session, challenge: str):
         "deadline": challenge.deadline,
         "award": challenge.award,
         "deleted": challenge.deleted,
-        # TODO: change to sorting from the metric
-        "sorting": "descending",
+        "sorting": sorting,
         "participants": participants,
         "additional_metrics": additional_metrics,
     }

@@ -16,10 +16,13 @@ class BalancedAccuracy(MetricBase):
         of 1.
     sample_weight : list[Any] | None, default None
         Sample weights.
+    sorting: str, default "ascending"
+        Information about the value of the metric.
     """
 
     adjusted: bool = False
     sample_weight: list[Any] | None = None
+    sorting: str = "ascending"
 
     def info(self) -> dict:
         return {
