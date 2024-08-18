@@ -114,19 +114,27 @@ def calculate_metric(
         raise HTTPException(
             status_code=422, detail=f"Metric {metric_name} is not defined"
         )
-    else:
-        metric = getattr(Metrics(), metric_name)
-        metric_params = metric.model_fields.keys()
-        params = dict()
 
-        if set(params.keys()).issubset(set(metric_params)):
-            return metric().calculate(expected, out)
-            # TODO: make 'None' to render to None in order for parameters to work
-            # return metric(**params).calculate(expected, out)
-        else:
-            detail_info = f"Metric {metric_name} has the following params: {
-                metric_params} and you gave those: {params}"
-            raise HTTPException(status_code=422, detail=detail_info)
+    metric = getattr(Metrics(), metric_name)
+    metric_params = metric.model_fields.keys()
+
+    # When getting params from db as json string, `None` values are read as
+    # string `"None"`, which causes errors, when params are given to the metric
+    # calculation function. This bit of code is to replace all string `"None"`
+    # with `None` values.
+    clean_params = dict()
+    for key, value in params.items():
+        if value == "None":
+            value = None
+
+        clean_params[key] = value
+
+    if set(clean_params.keys()).issubset(set(metric_params)):
+        return metric(**clean_params).calculate(expected, out)
+    else:
+        detail_info = f"Metric {metric_name} has the following params: {
+            metric_params} and you gave those: {clean_params}"
+        raise HTTPException(status_code=422, detail=detail_info)
 
 
 def str2metric(str_metric: str) -> MetricBase:
