@@ -21,7 +21,7 @@ from global_helper import (
 )
 from database.challenges import add_challenge
 from database.tests import add_tests
-from database.users import get_user_submissions
+from database.users import get_user_submissions, get_user_challenges
 
 engine = get_engine()
 session = get_session(engine)
@@ -110,6 +110,14 @@ async def user_submissions(
     user: user_dependency,
 ):
     return await get_user_submissions(async_session=db, user_name=user["username"])
+
+
+@user_router.post("/challenges")
+async def user_challenges(
+    db: db_dependency,
+    user: user_dependency,
+):
+    return await get_user_challenges(async_session=db, user_name=user["username"])
 
 
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])

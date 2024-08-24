@@ -49,3 +49,35 @@ async def get_user_submissions(
             )
 
     return result
+
+
+async def get_user_challenges(
+    async_session: async_sessionmaker[AsyncSession], user_name: str
+) -> list[dict[str, Any]]:
+    result = []
+
+    async with async_session as session:
+        challenges = (
+            (
+                await session.execute(
+                    select(Challenge).filter_by(author=user_name, deleted=False)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        for challenge in challenges:
+            result.append(
+                dict(
+                    id=challenge.id,
+                    title=challenge.title,
+                    source=challenge.source,
+                    type=challenge.type,
+                    description=challenge.description,
+                    deadline=challenge.deadline,
+                    award=challenge.award,
+                )
+            )
+
+    return result
