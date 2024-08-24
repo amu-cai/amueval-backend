@@ -71,7 +71,6 @@ async def delete_challenge(
             .scalars()
             .one()
         )
-        # challenge.deleted = True
 
         # Deleting tests for the challenge and evaluations for tests.
         tests = (
@@ -92,7 +91,11 @@ async def delete_challenge(
 
         # Deleting submissions for the challenge.
         submissions = (
-            (await session.execute(select(Submission).filter_by(challenge=challenge.id)))
+            (
+                await session.execute(
+                    select(Submission).filter_by(challenge=challenge.id)
+                )
+            )
             .scalars()
             .all()
         )
