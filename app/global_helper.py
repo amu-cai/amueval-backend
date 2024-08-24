@@ -6,7 +6,6 @@ from sqlalchemy import (
     select,
 )
 from database.models import Challenge
-from secrets import token_hex
 import os
 from fastapi import HTTPException, UploadFile
 

@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from admin.models import UserRightsModel
-from database.models import Challenge
-from secrets import token_hex
-import shutil
+from database.models import Challenge, Submission, Test, Evaluation
 import os
 
 
@@ -22,6 +20,8 @@ else:
 SAVE_SEPARATOR = "_~~~_"
 challenges_dir = f"{STORE}/challenges"
 deleted_challenges_dir = f"{STORE}/deleted_challenges"
+
+challenges_dir = f"{STORE}/challenges"
 
 
 async def get_users_settings(async_session):
@@ -71,10 +71,41 @@ async def delete_challenge(
             .scalars()
             .one()
         )
+        # challenge.deleted = True
 
-        challenge.deleted = True
+        # Deleting tests for the challenge and evaluations for tests.
+        tests = (
+            (await session.execute(select(Test).filter_by(challenge=challenge.id)))
+            .scalars()
+            .all()
+        )
+        for test in tests:
+            evaluations = (
+                (await session.execute(select(Evaluation).filter_by(test=test.id)))
+                .scalars()
+                .all()
+            )
+            for evaluation in evaluations:
+                await session.delete(evaluations)
+
+            await session.delete(test)
+
+        # Deleting submissions for the challenge.
+        submissions = (
+            (await session.execute(select(Submission).filter_by(challenge=challenge.id)))
+            .scalars()
+            .all()
+        )
+        for submission in submissions:
+            await session.delete(submission)
+
+        await session.delete(challenge)
 
         await session.commit()
+
+    file_full_name = f"{challenge_title}.tsv"
+    file_path = f"{challenges_dir}/{file_full_name}"
+    os.remove(file_path)
 
     return dict(
         success=True,
