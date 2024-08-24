@@ -21,6 +21,7 @@ from global_helper import (
 )
 from database.challenges import add_challenge
 from database.tests import add_tests
+from database.users import get_user_submissions
 
 engine = get_engine()
 session = get_session(engine)
@@ -98,6 +99,17 @@ async def edit_user(
     return await auth.edit_user(
         async_session=db, username=user["username"], edit_user_request=edit_user_request
     )
+
+
+user_router = APIRouter(prefix="/user", tags=["user"])
+
+
+@user_router.post("/submissions")
+async def user_submissions(
+    db: db_dependency,
+    user: user_dependency,
+):
+    return await get_user_submissions(async_session=db, user_name=user["username"])
 
 
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
@@ -268,8 +280,6 @@ async def get_my_submissions(db: db_dependency, challenge: str, user: user_depen
     )
 
 
-# TODO change
-# TODO sort with regard to sorting in the main metric and timestamp
 @evaluation_router.get("/{challenge}/leaderboard")
 async def get_leaderboard(db: db_dependency, challenge: str):
     return await evaluation.get_leaderboard(async_session=db, challenge_name=challenge)
@@ -319,6 +329,7 @@ async def delete_challenge(
 
 
 app.include_router(auth_router)
+app.include_router(user_router)
 app.include_router(challenges_router)
 app.include_router(evaluation_router)
 app.include_router(admin_router)
