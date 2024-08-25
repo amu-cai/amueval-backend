@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from typing import Annotated
 from fastapi import Depends, HTTPException
 from starlette import status
-from database.models import User
+from database.models import User, Challenge, Submission
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -221,12 +221,27 @@ async def get_profile_info(
             .scalars()
             .one()
         )
-    return {
-        "username": user.username,
-        "email": user.email,
-        "isAdmin": user.is_admin,
-        "isAuthor": user.is_author,
-    }
+
+        challenges_number = len(
+            (await session.execute(select(Challenge).filter_by(author=username)))
+            .scalar()
+            .all()
+        )
+
+        submissions_number = len(
+            (await session.execute(select(Submission).filter_by(submitter=user.id)))
+            .scalar()
+            .all()
+        )
+
+    return dict(
+        username=user.username,
+        email=user.email,
+        is_admin=user.is_admin,
+        is_author=user.is_author,
+        challenges_number=challenges_number,
+        submissions_number=submissions_number,
+    )
 
 
 async def edit_user(
