@@ -85,7 +85,7 @@ async def delete_challenge(
                 .all()
             )
             for evaluation in evaluations:
-                await session.delete(evaluations)
+                await session.delete(evaluation)
 
             await session.delete(test)
 
