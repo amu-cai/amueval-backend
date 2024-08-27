@@ -122,7 +122,8 @@ async def create_user(
         username = (
             (
                 await session.execute(
-                    select(User).filter_by(username=create_user_request.username)
+                    select(User).filter_by(
+                        username=create_user_request.username)
                 )
             )
             .scalars()
@@ -224,13 +225,13 @@ async def get_profile_info(
 
         challenges_number = len(
             (await session.execute(select(Challenge).filter_by(author=username)))
-            .scalar()
+            .scalars()
             .all()
         )
 
         submissions_number = len(
             (await session.execute(select(Submission).filter_by(submitter=user.id)))
-            .scalar()
+            .scalars()
             .all()
         )
 
