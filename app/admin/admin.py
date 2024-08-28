@@ -86,8 +86,10 @@ async def delete_challenge(
             )
             for evaluation in evaluations:
                 await session.delete(evaluation)
+            await session.flush()
 
             await session.delete(test)
+            await session.flush()
 
         # Deleting submissions for the challenge.
         submissions = (
@@ -101,6 +103,7 @@ async def delete_challenge(
         )
         for submission in submissions:
             await session.delete(submission)
+        await session.flush()
 
         await session.delete(challenge)
 
