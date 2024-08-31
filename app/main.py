@@ -215,11 +215,16 @@ async def edit_challenge(
         challenge_title=challenge_title,
         user_name=user_name,
     )
-    if not challenge_belongs_to_user:
+
+    user_is_admin = await auth.check_user_is_admin1(
+        async_session=db,
+        user_name=user_name,
+    )
+    if (not challenge_belongs_to_user) or (not user_is_admin):
         raise HTTPException(
             status_code=422,
             detail=f"Challenge <{
-                challenge_title}> does not belong to user <{user_name}>",
+                challenge_title}> does not belong to user <{user_name}> or user is not an admin",
         )
 
     return await challenges.edit_challenge(
