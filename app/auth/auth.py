@@ -94,6 +94,21 @@ async def check_user_is_admin(
         )
 
 
+async def check_user_is_admin1(
+    async_session: async_sessionmaker[AsyncSession], username: str
+):
+    async with async_session as session:
+        user = (
+            (await session.execute(select(User).filter_by(username=username)))
+            .scalars()
+            .one()
+        )
+
+        user_is_admin = user.is_admin
+
+    return user_is_admin
+
+
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -122,8 +137,7 @@ async def create_user(
         username = (
             (
                 await session.execute(
-                    select(User).filter_by(
-                        username=create_user_request.username)
+                    select(User).filter_by(username=create_user_request.username)
                 )
             )
             .scalars()
