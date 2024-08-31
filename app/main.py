@@ -216,7 +216,7 @@ async def edit_challenge(
         user_name=user_name,
     )
 
-    user_is_admin = await auth.check_user_admin1(
+    user_is_admin = await auth.check_user_is_admin1(
         async_session=db,
         user_name=user_name,
     )

@@ -95,11 +95,11 @@ async def check_user_is_admin(
 
 
 async def check_user_is_admin1(
-    async_session: async_sessionmaker[AsyncSession], username: str
+    async_session: async_sessionmaker[AsyncSession], user_name: str
 ):
     async with async_session as session:
         user = (
-            (await session.execute(select(User).filter_by(username=username)))
+            (await session.execute(select(User).filter_by(username=user_name)))
             .scalars()
             .one()
         )
