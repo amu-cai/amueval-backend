@@ -144,7 +144,8 @@ async def create_challenge(
     await auth.check_user_exists(async_session=db, username=user["username"])
 
     if challenge_title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
     if challenge_exists:
@@ -201,7 +202,8 @@ async def edit_challenge(
     await auth.check_user_exists(async_session=db, username=user_name)
 
     if challenge_title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
     if not challenge_exists:
@@ -220,7 +222,7 @@ async def edit_challenge(
         async_session=db,
         user_name=user_name,
     )
-    if (not challenge_belongs_to_user) or (not user_is_admin):
+    if (not challenge_belongs_to_user) and (not user_is_admin):
         raise HTTPException(
             status_code=422,
             detail=f"Challenge <{
