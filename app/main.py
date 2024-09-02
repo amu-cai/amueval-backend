@@ -3,12 +3,12 @@ import challenges.challenges as challenges
 import evaluation.evaluation as evaluation
 import admin.admin as admin
 
-from pathlib import Path
 from typing import Annotated
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import UploadFile, File
+from pydantic import ValidationError
 
 from admin.models import UserRightsModel
 from auth.models import CreateUserRequest, Token, EditUserRequest
@@ -17,11 +17,15 @@ from database.database import Base
 from sqlalchemy.ext.asyncio import AsyncSession
 from global_helper import (
     check_challenge_exists,
-    save_expected_file,
 )
-from database.challenges import add_challenge
-from database.tests import add_tests
 from database.users import get_user_submissions, get_user_challenges
+
+from handlers.challenges import (
+    CreateChallengeRerquest,
+    CreateChallengeResponse,
+    create_challenge_handler,
+)
+
 
 engine = get_engine()
 session = get_session(engine)
@@ -123,7 +127,7 @@ async def user_challenges(
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
 
 
-@challenges_router.post("/create-challenge")
+@challenges_router.post("/create-challenge", response_model=CreateChallengeResponse)
 async def create_challenge(
     db: db_dependency,
     user: user_dependency,
@@ -139,54 +143,31 @@ async def create_challenge(
     challenge_file: UploadFile = File(...),
     additional_metrics: Annotated[str, Form()] = "",
 ):
-    # TODO: move db methods to their src files and thow exceptions only from
-    # endpoints
-    await auth.check_user_exists(async_session=db, username=user["username"])
-
-    if challenge_title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
-
-    challenge_exists = await check_challenge_exists(db, challenge_title)
-    if challenge_exists:
+    try:
+        request = CreateChallengeRerquest(
+            author=user["username"],
+            title=challenge_title,
+            source=challenge_source,
+            type=type,
+            description=description,
+            deadline=deadline,
+            award=award,
+            metric=metric,
+            parameters=parameters,
+            sorting=sorting,
+            additional_metrics=additional_metrics,
+        )
+    except ValidationError as e:
         raise HTTPException(
             status_code=422,
-            detail=f"Challenge title <{challenge_title}> already exists",
+            detail=e.json(),
         )
 
-    proper_file_extension = ".tsv" == Path(challenge_file.filename).suffix
-    if not proper_file_extension:
-        raise HTTPException(
-            status_code=422,
-            detail=f"File <{challenge_file.filename}> is not a TSV file",
-        )
-
-    await save_expected_file(challenge_file, challenge_title)
-
-    added_challenge = await add_challenge(
+    return await create_challenge_handler(
         async_session=db,
-        username=user.get("username"),
-        title=challenge_title,
-        source=challenge_source,
-        description=description,
-        type=type,
-        deadline=deadline,
-        award=award,
+        request=request,
+        file=challenge_file,
     )
-
-    created_tests = await add_tests(
-        async_session=db,
-        challenge=added_challenge.get("challenge_id"),
-        main_metric=metric,
-        main_metric_parameters=parameters,
-        additional_metrics=additional_metrics,
-    )
-
-    return {
-        "success": True,
-        "message": "Challenge uploaded successfully",
-        "challenge_title": added_challenge.get("challenge_title"),
-        "main_metric": created_tests.get("test_main_metric"),
-    }
 
 
 @challenges_router.put("/edit-challenge")
@@ -201,7 +182,8 @@ async def edit_challenge(
     await auth.check_user_exists(async_session=db, username=user_name)
 
     if challenge_title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
     if not challenge_exists:

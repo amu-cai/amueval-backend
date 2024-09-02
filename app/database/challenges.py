@@ -1,24 +1,17 @@
-from database.models import Challenge
+from sqlalchemy import (
+    exists,
+)
 from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
 )
 
-"""
-TODO move this to the endpoint
-STORE_ENV = os.getenv("STORE_PATH")
-if STORE_ENV is not None:
-    STORE = STORE_ENV
-else:
-    raise FileNotFoundError("STORE_PATH env variable not defined")
-
-challenges_dir = f"{STORE}/challenges"
-"""
+from database.models import Challenge
 
 
 async def add_challenge(
     async_session: async_sessionmaker[AsyncSession],
-    username: str,
+    user_name: str,
     title: str,
     source: str,
     description: str,
@@ -27,7 +20,7 @@ async def add_challenge(
     award: str,
 ):
     challenge = Challenge(
-        author=username,
+        author=user_name,
         title=title,
         type=type,
         source=source,
@@ -62,8 +55,19 @@ async def add_challenge(
         await session.commit()
 
     return {
-        "success": True,
         "challenge_title": challenge_title,
         "challenge_id": challenge_id,
-        "message": "Challenge uploaded successfully",
     }
+
+
+async def check_challenge_exists(
+    async_session: async_sessionmaker[AsyncSession], title: str
+) -> bool:
+    async with async_session as session:
+        challenge_exist = (
+            await session.execute(
+                exists(Challenge).where(Challenge.title == title).select()
+            )
+        ).scalar()
+
+    return challenge_exist

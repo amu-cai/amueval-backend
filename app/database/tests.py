@@ -1,8 +1,8 @@
 import json
 
 from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
 )
 
 from database.models import Test
@@ -46,8 +46,6 @@ async def add_tests(
             await session.commit()
 
     return {
-        "success": True,
         "test_main_metric": main_metric,
         "test_additional_metrics": additional_metrics,
-        "message": "Test uploaded successfully",
     }

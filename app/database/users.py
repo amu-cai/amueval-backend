@@ -2,6 +2,7 @@ from database.models import User, Submission, Challenge
 
 from sqlalchemy import (
     select,
+    exists,
 )
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
@@ -81,3 +82,16 @@ async def get_user_challenges(
             )
 
     return result
+
+
+async def check_user_exists(
+    async_session: async_sessionmaker[AsyncSession], user_name: str
+) -> bool:
+    async with async_session as session:
+        user_exist = (
+            await session.execute(
+                exists(User).where(User.username == user_name).select()
+            )
+        ).scalar()
+
+    return user_exist
