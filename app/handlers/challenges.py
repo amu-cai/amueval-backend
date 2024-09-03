@@ -43,10 +43,9 @@ class CreateChallengeRerquest(BaseModel):
 
 
 class CreateChallengeResponse(BaseModel):
-    message: str = "Challenge created successfully"
+    message: str = "Challenge created"
     challenge_title: str
     main_metric: str
-    error: str | None
 
 
 async def create_challenge_handler(
@@ -62,10 +61,7 @@ async def create_challenge_handler(
         async_session=async_session, user_name=request.author
     )
     if not author_exists:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User does not exist",
-        )
+        raise HTTPException(status_code=401, detail="User does not exist")
 
     # Checking title
     if request.title == "":
@@ -115,6 +111,5 @@ async def create_challenge_handler(
     response = CreateChallengeResponse(
         challenge_title=added_challenge.get("challenge_title"),
         main_metric=added_tests.get("test_main_metric"),
-        error=None,
     )
     return response

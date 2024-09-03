@@ -3,12 +3,12 @@ import challenges.challenges as challenges
 import evaluation.evaluation as evaluation
 import admin.admin as admin
 
-from typing import Annotated
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import UploadFile, File
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
+from typing import Annotated
 
 from admin.models import UserRightsModel
 from auth.models import CreateUserRequest, Token, EditUserRequest
@@ -59,6 +59,10 @@ app.add_middleware(
 
 user_dependency = Annotated[dict, Depends(auth.get_current_user)]
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
+
+
+class ErrorMessage(BaseModel):
+    message: str
 
 
 @app.on_event("startup")
@@ -127,7 +131,11 @@ async def user_challenges(
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
 
 
-@challenges_router.post("/create-challenge", response_model=CreateChallengeResponse)
+@challenges_router.post(
+    "/create-challenge",
+    response_model=CreateChallengeResponse,
+    responses={401: {"model": ErrorMessage, "description": "User does not exist"}},
+)
 async def create_challenge(
     db: db_dependency,
     user: user_dependency,
@@ -182,8 +190,7 @@ async def edit_challenge(
     await auth.check_user_exists(async_session=db, username=user_name)
 
     if challenge_title == "":
-        raise HTTPException(
-            status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
     if not challenge_exists:
