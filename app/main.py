@@ -23,7 +23,10 @@ from database.users import get_user_submissions, get_user_challenges
 from handlers.challenges import (
     CreateChallengeRerquest,
     CreateChallengeResponse,
+    EditChallengeRerquest,
+    EditChallengeResponse,
     create_challenge_handler,
+    edit_challenge_handler,
 )
 
 
@@ -134,7 +137,21 @@ challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
 @challenges_router.post(
     "/create-challenge",
     response_model=CreateChallengeResponse,
-    responses={401: {"model": ErrorMessage, "description": "User does not exist"}},
+    summary="Creates a challenge",
+    description="Creates a challenge given required data and a '.tsv' file.",
+    status_code=201,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        415: {
+            "model": ErrorMessage,
+            "description": "File <filename> is not a TSV file",
+        },
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title cannot be empty or challenge title <challenge title> already exists",
+        },
+    },
 )
 async def create_challenge(
     db: db_dependency,
@@ -147,10 +164,17 @@ async def create_challenge(
     type: Annotated[str, Form()] = "",
     metric: Annotated[str, Form()] = "",
     parameters: Annotated[str, Form()] = "",
+    # TODO: Check if 'sorting' is still needed
     sorting: Annotated[str, Form()] = "",
     challenge_file: UploadFile = File(...),
     additional_metrics: Annotated[str, Form()] = "",
 ):
+    """
+    Creates challenge from given data. In order to check, if the data is in the
+    right format, it will try to convert input data to @CreateChallengeRerquest
+    model. The rest of the checks is performed in @create_challenge_handler.
+    """
+
     try:
         request = CreateChallengeRerquest(
             author=user["username"],
@@ -167,7 +191,7 @@ async def create_challenge(
         )
     except ValidationError as e:
         raise HTTPException(
-            status_code=422,
+            status_code=400,
             detail=e.json(),
         )
 
@@ -178,7 +202,24 @@ async def create_challenge(
     )
 
 
-@challenges_router.put("/edit-challenge")
+@challenges_router.put(
+    "/edit-challenge",
+    summary="Edits a challenge",
+    description="Changes description and deadline for a given challenge. Olny\
+        user that created the challenge and admin are authorized to do this.",
+    status_code=200,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        403: {
+            "model": ErrorMessage,
+            "description": "Challenge <challenge title> does not belong to user <user_name> or user is not an admin",
+        },
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
 async def edit_challenge(
     db: db_dependency,
     user: user_dependency,
@@ -186,41 +227,20 @@ async def edit_challenge(
     description: Annotated[str, Form()] = "",
     deadline: Annotated[str, Form()] = "",
 ):
-    user_name = user["username"]
-    await auth.check_user_exists(async_session=db, username=user_name)
+    """
+    Changes description and deadline for a given challenge.
+    """
 
-    if challenge_title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
-
-    challenge_exists = await check_challenge_exists(db, challenge_title)
-    if not challenge_exists:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Challenge title <{challenge_title}> does not exist",
-        )
-
-    challenge_belongs_to_user = await challenges.check_challenge_user(
-        async_session=db,
-        challenge_title=challenge_title,
-        user_name=user_name,
-    )
-
-    user_is_admin = await auth.check_user_is_admin1(
-        async_session=db,
-        user_name=user_name,
-    )
-    if (not challenge_belongs_to_user) or (not user_is_admin):
-        raise HTTPException(
-            status_code=422,
-            detail=f"Challenge <{
-                challenge_title}> does not belong to user <{user_name}> or user is not an admin",
-        )
-
-    return await challenges.edit_challenge(
-        async_session=db,
-        challenge_title=challenge_title,
-        deadline=deadline,
+    request = EditChallengeRerquest(
+        user=user.get("username"),
+        title=challenge_title,
         description=description,
+        deadline=deadline,
+    )
+
+    return await edit_challenge_handler(
+        async_session=db,
+        request=request,
     )
 
 

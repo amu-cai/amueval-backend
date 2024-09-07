@@ -1,7 +1,6 @@
 from fastapi import (
     HTTPException,
     UploadFile,
-    status,
 )
 from pathlib import Path
 from pydantic import (
@@ -9,16 +8,21 @@ from pydantic import (
     validator,
 )
 from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
 )
 
 from database.challenges import (
     add_challenge,
+    edit_challenge,
+    check_challenge_author,
     check_challenge_exists,
 )
 from database.tests import add_tests
-from database.users import check_user_exists
+from database.users import (
+    check_user_exists,
+    check_user_is_admin,
+)
 from handlers.files import save_expected_file
 
 
@@ -48,13 +52,30 @@ class CreateChallengeResponse(BaseModel):
     main_metric: str
 
 
+class EditChallengeRerquest(BaseModel):
+    user: str
+    title: str
+    description: str
+    deadline: str
+
+
+class EditChallengeResponse(BaseModel):
+    succes: bool
+    message: str
+
+
 async def create_challenge_handler(
     async_session: async_sessionmaker[AsyncSession],
     request: CreateChallengeRerquest,
     file: UploadFile,
 ) -> CreateChallengeResponse:
     """
-    Description
+    Creates a challenge from given @CreateChallengeRerquest and a '.tsv' file.
+    Checks if:
+
+    - user exists,
+    - challenge of given title exists or the title is empty,
+    - given file has '.tsv' extension.
     """
     # Checking user
     author_exists = await check_user_exists(
@@ -64,23 +85,21 @@ async def create_challenge_handler(
         raise HTTPException(status_code=401, detail="User does not exist")
 
     # Checking title
-    if request.title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
-
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=request.title
     )
-    if challenge_exists:
+    if challenge_exists or request.title == "":
         raise HTTPException(
             status_code=422,
-            detail=f"Challenge title <{request.title}> already exists",
+            detail=f"Challenge title cannot be empty or challenge title <{
+                request.title}> already exists",
         )
 
     # Checking file name
     proper_file_extension = ".tsv" == Path(file.filename).suffix
     if not proper_file_extension:
         raise HTTPException(
-            status_code=422,
+            status_code=415,
             detail=f"File <{file.filename}> is not a TSV file",
         )
 
@@ -108,8 +127,49 @@ async def create_challenge_handler(
     # Saving 'expected' file with name of the challenge
     await save_expected_file(file, request.title)
 
-    response = CreateChallengeResponse(
+    return CreateChallengeResponse(
         challenge_title=added_challenge.get("challenge_title"),
         main_metric=added_tests.get("test_main_metric"),
     )
-    return response
+
+
+async def edit_challenge_handler(
+    async_session: async_sessionmaker[AsyncSession],
+    request: EditChallengeRerquest,
+) -> None:
+    if request.title == "":
+        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+
+    challenge_exists = await check_challenge_exists(
+        async_session=async_session, title=request.title
+    )
+    if not challenge_exists:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Challenge title <{request.title}> does not exist",
+        )
+
+    challenge_belongs_to_user = await check_challenge_author(
+        async_session=async_session,
+        challenge_title=request.title,
+        user_name=request.user,
+    )
+    user_is_admin = await check_user_is_admin(
+        async_session=async_session,
+        user_name=request.name,
+    )
+    if (not challenge_belongs_to_user) or (not user_is_admin):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Challenge <{
+                request.title}> does not belong to user <{request.user}> or user is not an admin",
+        )
+
+    await edit_challenge(
+        async_session=async_session,
+        title=request.title,
+        description=request.description,
+        deadline=request.deadline,
+    )
+
+    return None

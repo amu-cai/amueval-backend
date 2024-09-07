@@ -1,12 +1,13 @@
 from sqlalchemy import (
     exists,
+    select,
 )
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
 )
 
-from database.models import Challenge
+from database.models import Challenge, User
 
 
 async def add_challenge(
@@ -63,6 +64,9 @@ async def add_challenge(
 async def check_challenge_exists(
     async_session: async_sessionmaker[AsyncSession], title: str
 ) -> bool:
+    """
+    Checks, if a given chellenge exists.
+    """
     async with async_session as session:
         challenge_exist = (
             await session.execute(
@@ -71,3 +75,51 @@ async def check_challenge_exists(
         ).scalar()
 
     return challenge_exist
+
+
+async def check_challenge_author(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_title: str,
+    user_name: str,
+) -> bool:
+    """
+    Checks, if given challenge is created by given user.
+    """
+    async with async_session as session:
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=challenge_title)))
+            .scalars()
+            .one()
+        )
+
+        user = (
+            (await session.execute(select(User).filter_by(username=user_name)))
+            .scalars()
+            .one()
+        )
+
+        result = challenge.author == user.username
+
+    return result
+
+
+async def edit_challenge(
+    async_session: async_sessionmaker[AsyncSession],
+    title: str,
+    description: str,
+    deadline: str,
+):
+    """
+    Changes challange description and deadline.
+    """
+    async with async_session as session:
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=title)))
+            .scalars()
+            .one()
+        )
+
+        challenge.deadline = deadline
+        challenge.description = description
+
+        await session.commit()
