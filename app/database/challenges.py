@@ -92,13 +92,7 @@ async def check_challenge_author(
             .one()
         )
 
-        user = (
-            (await session.execute(select(User).filter_by(username=user_name)))
-            .scalars()
-            .one()
-        )
-
-        result = challenge.author == user.username
+        result = challenge.author == user_name
 
     return result
 

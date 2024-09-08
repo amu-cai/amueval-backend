@@ -156,7 +156,7 @@ async def edit_challenge_handler(
     )
     user_is_admin = await check_user_is_admin(
         async_session=async_session,
-        user_name=request.name,
+        user_name=request.user,
     )
     if (not challenge_belongs_to_user) or (not user_is_admin):
         raise HTTPException(
