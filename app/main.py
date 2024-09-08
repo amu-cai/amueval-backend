@@ -24,7 +24,6 @@ from handlers.challenges import (
     CreateChallengeRerquest,
     CreateChallengeResponse,
     EditChallengeRerquest,
-    EditChallengeResponse,
     create_challenge_handler,
     edit_challenge_handler,
 )

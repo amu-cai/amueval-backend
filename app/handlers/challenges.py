@@ -59,11 +59,6 @@ class EditChallengeRerquest(BaseModel):
     deadline: str
 
 
-class EditChallengeResponse(BaseModel):
-    succes: bool
-    message: str
-
-
 async def create_challenge_handler(
     async_session: async_sessionmaker[AsyncSession],
     request: CreateChallengeRerquest,
