@@ -14,16 +14,27 @@ from sqlalchemy.ext.asyncio import (
 
 from database.challenges import (
     add_challenge,
+    all_challenges,
     edit_challenge,
     check_challenge_author,
     check_challenge_exists,
 )
-from database.tests import add_tests
+from database.evaluations import (
+    test_best_score,
+)
+from database.submissions import (
+    challenge_participants,
+)
+from database.tests import (
+    add_tests,
+    challenge_main_metric,
+)
 from database.users import (
     check_user_exists,
     check_user_is_admin,
 )
 from handlers.files import save_expected_file
+from metrics.metrics import Metrics
 
 
 class CreateChallengeRerquest(BaseModel):
@@ -57,6 +68,24 @@ class EditChallengeRerquest(BaseModel):
     title: str
     description: str
     deadline: str
+
+
+class GetChallengeResponse(BaseModel):
+    id: int
+    title: str
+    type: str
+    description: str
+    main_metric: str
+    best_sore: float
+    deadline: str
+    award: str
+    deleted: bool
+    sorting: str
+    participants: int
+
+
+class GetChallengesResponse(BaseModel):
+    challenges: list[GetChallengeResponse]
 
 
 async def create_challenge_handler(
@@ -168,3 +197,47 @@ async def edit_challenge_handler(
     )
 
     return None
+
+
+async def get_challenges_handler(
+    async_session: async_sessionmaker[AsyncSession],
+) -> list[GetChallengeResponse]:
+    challenges = await all_challenges(async_session=async_session)
+
+    results = []
+    for challenge in challenges:
+        main_test = await challenge_main_metric(
+            async_session=async_session,
+            challenge_id=challenge.id,
+        )
+
+        main_metric = getattr(Metrics(), main_test.metric)
+        sorting = main_metric().sorting
+
+        participants = await challenge_participants(
+            async_session=async_session, challenge_id=challenge.id
+        )
+
+        best_score = await test_best_score(
+            async_session=async_session,
+            test_id=main_test.id,
+            sorting=sorting,
+        )
+
+        results.append(
+            GetChallengeResponse(
+                id=challenge.id,
+                title=challenge.title,
+                type=challenge.type,
+                description=challenge.description,
+                main_metric=main_test.metric,
+                best_sore=best_score,
+                deadline=challenge.deadline,
+                award=challenge.award,
+                deleted=challenge.deleted,
+                sorting=sorting,
+                participants=participants,
+            )
+        )
+
+    return GetChallengesResponse(challenges=results)

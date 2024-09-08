@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
 )
+from typing import Any
 
-from database.models import Challenge, User
+from database.models import Challenge
 
 
 async def add_challenge(
@@ -19,7 +20,7 @@ async def add_challenge(
     type: str,
     deadline: str,
     award: str,
-):
+) -> dict[str, Any]:
     challenge = Challenge(
         author=user_name,
         title=title,
@@ -102,7 +103,7 @@ async def edit_challenge(
     title: str,
     description: str,
     deadline: str,
-):
+) -> None:
     """
     Changes challange description and deadline.
     """
@@ -117,3 +118,27 @@ async def edit_challenge(
         challenge.description = description
 
         await session.commit()
+
+
+async def all_challenges(
+    async_session: async_sessionmaker[AsyncSession],
+) -> list[Challenge]:
+    """
+    Returns list of all challenges.
+    """
+    async with async_session as session:
+        challenges = (
+            (await session.execute(select(Challenge).filter_by(deleted=False)))
+            .scalars()
+            .all()
+        )
+
+    return challenges
+
+
+async def challenge_main_metric(
+    async_session: async_sessionmaker[AsyncSession],
+):
+    """
+    Given a challenge returns the main metric.
+    """

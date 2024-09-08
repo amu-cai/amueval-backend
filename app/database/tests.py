@@ -1,5 +1,8 @@
 import json
 
+from sqlalchemy import (
+    select,
+)
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -49,3 +52,24 @@ async def add_tests(
         "test_main_metric": main_metric,
         "test_additional_metrics": additional_metrics,
     }
+
+
+async def challenge_main_metric(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> Test:
+    """
+    Given a challenge returns the main metric.
+    """
+    async with async_session as session:
+        main_test = (
+            (
+                await session.execute(
+                    select(Test).filter_by(challenge=challenge_id, main_metric=True)
+                )
+            )
+            .scalars()
+            .one()
+        )
+
+    return main_test
