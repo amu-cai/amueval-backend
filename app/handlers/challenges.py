@@ -76,7 +76,7 @@ class GetChallengeResponse(BaseModel):
     type: str
     description: str
     main_metric: str
-    best_sore: float
+    best_sore: float | None
     deadline: str
     award: str
     deleted: bool
@@ -162,7 +162,8 @@ async def edit_challenge_handler(
     request: EditChallengeRerquest,
 ) -> None:
     if request.title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=request.title

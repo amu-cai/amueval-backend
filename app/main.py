@@ -24,7 +24,7 @@ from handlers.challenges import (
     CreateChallengeRerquest,
     CreateChallengeResponse,
     EditChallengeRerquest,
-    GetChallengeResponse,
+    GetChallengesResponse,
     create_challenge_handler,
     edit_challenge_handler,
     get_challenges_handler,
@@ -250,10 +250,13 @@ async def edit_challenge(
     summary="Gives list of all challenges",
     description="Returns a list of all active challenges.",
     status_code=200,
-    response_model=list[GetChallengeResponse],
 )
 async def get_challenges(db: db_dependency):
-    return await get_challenges_handler(async_session=db)
+    challenges = (await get_challenges_handler(async_session=db)).challenges
+
+    challenges_dicts = [c.model_dump() for c in challenges]
+
+    return challenges_dicts
 
 
 @challenges_router.get("/challenge/{challenge}")

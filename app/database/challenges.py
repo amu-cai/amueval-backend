@@ -134,11 +134,3 @@ async def all_challenges(
         )
 
     return challenges
-
-
-async def challenge_main_metric(
-    async_session: async_sessionmaker[AsyncSession],
-):
-    """
-    Given a challenge returns the main metric.
-    """
