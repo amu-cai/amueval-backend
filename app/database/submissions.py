@@ -9,12 +9,12 @@ from sqlalchemy.ext.asyncio import (
 from database.models import Submission
 
 
-async def challenge_participants(
+async def challenge_participants_ids(
     async_session: async_sessionmaker[AsyncSession],
     challenge_id: int,
 ) -> list[int]:
     """
-    Given a challenge returns the list of all participants, without repetitions.
+    Given a challenge returns the list of all participants ids, without repetitions.
     """
     async with async_session as session:
         submissions = (
@@ -27,6 +27,6 @@ async def challenge_participants(
             .all()
         )
 
-    participants = len(set([submission.submitter for submission in submissions]))
+    participants = set([submission.submitter for submission in submissions])
 
     return participants

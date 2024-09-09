@@ -21,10 +21,11 @@ from global_helper import (
 from database.users import get_user_submissions, get_user_challenges
 
 from handlers.challenges import (
+    ChallengeInfoResponse,
     CreateChallengeRerquest,
     CreateChallengeResponse,
     EditChallengeRerquest,
-    GetChallengesResponse,
+    challenge_info_handler,
     create_challenge_handler,
     edit_challenge_handler,
     get_challenges_handler,
@@ -254,14 +255,29 @@ async def edit_challenge(
 async def get_challenges(db: db_dependency):
     challenges = (await get_challenges_handler(async_session=db)).challenges
 
+    # TODO: change the input for the nedpoint for the model and the output, also
+    # to the model
     challenges_dicts = [c.model_dump() for c in challenges]
 
     return challenges_dicts
 
 
-@challenges_router.get("/challenge/{challenge}")
+@challenges_router.get(
+    "/challenge/{challenge}",
+    summary="Information about a challenge",
+    description="Returns information for a given challenge.",
+    response_model=ChallengeInfoResponse,
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorMessage,
+            "description": "Challenge <challenge title> does not exist",
+        },
+    },
+)
 async def get_challenge_info(db: db_dependency, challenge: str):
-    return await challenges.get_challenge_info(async_session=db, challenge=challenge)
+    response = await challenge_info_handler(async_session=db, title=challenge)
+    return response.model_dump()
 
 
 evaluation_router = APIRouter(prefix="/evaluation", tags=["evaluation"])

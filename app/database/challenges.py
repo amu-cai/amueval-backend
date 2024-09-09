@@ -134,3 +134,19 @@ async def all_challenges(
         )
 
     return challenges
+
+
+async def get_challenge(
+    async_session: async_sessionmaker[AsyncSession],
+    title: str,
+) -> Challenge:
+    """
+    Given challenge title returns the challenge.
+    """
+    async with async_session as session:
+        challenge = (
+            (await session.execute(select(Challenge).filter_by(title=title)))
+            .scalars()
+            .one()
+        )
+        return challenge

@@ -15,21 +15,24 @@ from sqlalchemy.ext.asyncio import (
 from database.challenges import (
     add_challenge,
     all_challenges,
-    edit_challenge,
     check_challenge_author,
     check_challenge_exists,
+    edit_challenge,
+    get_challenge,
 )
 from database.evaluations import (
     test_best_score,
 )
 from database.submissions import (
-    challenge_participants,
+    challenge_participants_ids,
 )
 from database.tests import (
     add_tests,
+    challenge_additional_metrics,
     challenge_main_metric,
 )
 from database.users import (
+    challenge_participants_names,
     check_user_exists,
     check_user_is_admin,
 )
@@ -88,6 +91,24 @@ class GetChallengesResponse(BaseModel):
     challenges: list[GetChallengeResponse]
 
 
+class ChallengeInfoResponse(BaseModel):
+    id: int
+    title: str
+    author: str
+    type: str
+    mainMetric: str
+    mainMetricParameters: str
+    description: str
+    source: str
+    bestScore: float | None
+    deadline: str
+    award: str
+    deleted: bool
+    sorting: str
+    participants: list[str]
+    additional_metrics: list[str]
+
+
 async def create_challenge_handler(
     async_session: async_sessionmaker[AsyncSession],
     request: CreateChallengeRerquest,
@@ -95,11 +116,6 @@ async def create_challenge_handler(
 ) -> CreateChallengeResponse:
     """
     Creates a challenge from given @CreateChallengeRerquest and a '.tsv' file.
-    Checks if:
-
-    - user exists,
-    - challenge of given title exists or the title is empty,
-    - given file has '.tsv' extension.
     """
     # Checking user
     author_exists = await check_user_exists(
@@ -161,9 +177,11 @@ async def edit_challenge_handler(
     async_session: async_sessionmaker[AsyncSession],
     request: EditChallengeRerquest,
 ) -> None:
+    """
+    Allows to edit deadline and description of a challenge.
+    """
     if request.title == "":
-        raise HTTPException(
-            status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=request.title
@@ -202,7 +220,7 @@ async def edit_challenge_handler(
 
 async def get_challenges_handler(
     async_session: async_sessionmaker[AsyncSession],
-) -> list[GetChallengeResponse]:
+) -> GetChallengesResponse:
     challenges = await all_challenges(async_session=async_session)
 
     results = []
@@ -215,7 +233,7 @@ async def get_challenges_handler(
         main_metric = getattr(Metrics(), main_test.metric)
         sorting = main_metric().sorting
 
-        participants = await challenge_participants(
+        participants = await challenge_participants_ids(
             async_session=async_session, challenge_id=challenge.id
         )
 
@@ -237,8 +255,69 @@ async def get_challenges_handler(
                 award=challenge.award,
                 deleted=challenge.deleted,
                 sorting=sorting,
-                participants=participants,
+                participants=len(participants),
             )
         )
 
     return GetChallengesResponse(challenges=results)
+
+
+async def challenge_info_handler(
+    async_session: async_sessionmaker[AsyncSession],
+    title: str,
+):
+    challenge_exists = await check_challenge_exists(
+        async_session=async_session, title=title
+    )
+    if not challenge_exists:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Challenge <{title}> does not exist",
+        )
+
+    challenge = await get_challenge(
+        async_session=async_session,
+        title=title,
+    )
+
+    main_test = await challenge_main_metric(
+        async_session=async_session,
+        challenge_id=challenge.id,
+    )
+    main_metric = getattr(Metrics(), main_test.metric)
+    sorting = main_metric().sorting
+
+    additional_tests = await challenge_additional_metrics(
+        async_session=async_session,
+        challenge_id=challenge.id,
+    )
+    additional_metrics = [test.metric for test in additional_tests]
+
+    participants = await challenge_participants_names(
+        async_session=async_session,
+        challenge_id=challenge.id,
+    )
+
+    best_score = await test_best_score(
+        async_session=async_session,
+        test_id=main_test.id,
+        sorting=sorting,
+    )
+
+    return ChallengeInfoResponse(
+        id=challenge.id,
+        title=challenge.title,
+        author=challenge.author,
+        type=challenge.type,
+        mainMetric=main_test.metric,
+        mainMetricParameters=main_test.metric_parameters,
+        description=challenge.description,
+        source=challenge.source,
+        bestScore=best_score,
+        deadline=challenge.deadline,
+        award=challenge.award,
+        deleted=challenge.deleted,
+        sorting=sorting,
+        participants=participants,
+        additional_metrics=additional_metrics,
+    )

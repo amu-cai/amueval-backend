@@ -73,3 +73,25 @@ async def challenge_main_metric(
         )
 
     return main_test
+
+
+async def challenge_additional_metrics(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> list[Test]:
+    """
+    Given a challenge returns the list of all additional metrics (without the
+    main metric).
+    """
+    async with async_session as session:
+        additional_tests = (
+            (
+                await session.execute(
+                    select(Test).filter_by(challenge=challenge_id, main_metric=False)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    return additional_tests

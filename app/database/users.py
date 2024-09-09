@@ -1,14 +1,15 @@
-from database.models import User, Submission, Challenge
-
 from sqlalchemy import (
     select,
     exists,
 )
 from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
 )
 from typing import Any
+
+from database.models import User, Submission, Challenge
+from database.submissions import challenge_participants_ids
 
 
 async def get_user_submissions(
@@ -117,3 +118,27 @@ async def check_user_is_admin(
         user_is_admin = user.is_admin
 
     return user_is_admin
+
+
+async def challenge_participants_names(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> list[str]:
+    """
+    Given a challenge returns the number of participants, without repetitions.
+    """
+    users_ids = await challenge_participants_ids(
+        async_session=async_session,
+        challenge_id=challenge_id,
+    )
+
+    async with async_session as session:
+        users_names = [
+            (await session.execute(select(User).filter_by(id=user_id)))
+            .scalars()
+            .one()
+            .username
+            for user_id in users_ids
+        ]
+
+    return users_names
