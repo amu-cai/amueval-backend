@@ -1,5 +1,4 @@
 import auth.auth as auth
-import challenges.challenges as challenges
 import evaluation.evaluation as evaluation
 import admin.admin as admin
 
@@ -15,7 +14,7 @@ from auth.models import CreateUserRequest, Token, EditUserRequest
 from database.db_connection import get_engine, get_session
 from database.database import Base
 from sqlalchemy.ext.asyncio import AsyncSession
-from global_helper import (
+from database.challenges import (
     check_challenge_exists,
 )
 from database.users import get_user_submissions, get_user_challenges

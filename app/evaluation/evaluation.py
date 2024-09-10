@@ -17,7 +17,7 @@ from metrics.metrics import (
     all_metrics,
     calculate_default_metric,
 )
-from global_helper import (
+from handlers.files import (
     check_file_extension,
 )
 from database.models import Submission, Challenge, Test, Evaluation, User
@@ -39,7 +39,9 @@ async def submit(
     submission_file: UploadFile = File(...),
 ):
     submitter = username
-    check_file_extension(submission_file, "tsv")
+    good_extension = check_file_extension(submission_file, "tsv")
+    if not good_extension:
+        raise HTTPException(status_code=422, detail="Bad extension")
 
     async with async_session as session:
         challenge = (
@@ -185,7 +187,8 @@ async def get_all_submissions(
         )
 
         main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
-        additional_metrics_tests = [test for test in tests if not test.main_metric]
+        additional_metrics_tests = [
+            test for test in tests if not test.main_metric]
 
         submissions = (
             (
@@ -302,7 +305,8 @@ async def get_leaderboard(
         main_metric_test = (
             (
                 await session.execute(
-                    select(Test).filter_by(challenge=challenge.id, main_metric=True)
+                    select(Test).filter_by(
+                        challenge=challenge.id, main_metric=True)
                 )
             )
             .scalars()
@@ -329,7 +333,8 @@ async def get_leaderboard(
             .all()
         )
 
-        submitters_ids = set([submission.submitter for submission in submissions])
+        submitters_ids = set(
+            [submission.submitter for submission in submissions])
         submitters = []
         for submitter_id in submitters_ids:
             submitters.append(
