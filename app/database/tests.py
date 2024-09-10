@@ -18,6 +18,9 @@ async def add_tests(
     main_metric_parameters: str,
     additional_metrics: str,
 ) -> dict:
+    """
+    Adds tests for the main metric and additional metric for a given challenge.
+    """
     main_metric_parameters_json = json.loads(main_metric_parameters)
     test_model_main = Test(
         challenge=challenge,
@@ -65,7 +68,8 @@ async def challenge_main_metric(
         main_test = (
             (
                 await session.execute(
-                    select(Test).filter_by(challenge=challenge_id, main_metric=True)
+                    select(Test).filter_by(
+                        challenge=challenge_id, main_metric=True)
                 )
             )
             .scalars()
@@ -87,7 +91,8 @@ async def challenge_additional_metrics(
         additional_tests = (
             (
                 await session.execute(
-                    select(Test).filter_by(challenge=challenge_id, main_metric=False)
+                    select(Test).filter_by(
+                        challenge=challenge_id, main_metric=False)
                 )
             )
             .scalars()

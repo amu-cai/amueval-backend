@@ -181,7 +181,8 @@ async def edit_challenge_handler(
     Allows to edit deadline and description of a challenge.
     """
     if request.title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=request.title
@@ -221,6 +222,9 @@ async def edit_challenge_handler(
 async def get_challenges_handler(
     async_session: async_sessionmaker[AsyncSession],
 ) -> GetChallengesResponse:
+    """
+    Returns list of all challenges.
+    """
     challenges = await all_challenges(async_session=async_session)
 
     results = []
@@ -266,6 +270,9 @@ async def challenge_info_handler(
     async_session: async_sessionmaker[AsyncSession],
     title: str,
 ):
+    """
+    Returns information about a given challenge.
+    """
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=title
     )

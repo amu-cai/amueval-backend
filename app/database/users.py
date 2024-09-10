@@ -15,6 +15,9 @@ from database.submissions import challenge_participants_ids
 async def get_user_submissions(
     async_session: async_sessionmaker[AsyncSession], user_name: str
 ) -> list[dict[str, Any]]:
+    """
+    Returns list of all user submissions, given user name.
+    """
     result = []
 
     async with async_session as session:
@@ -27,7 +30,8 @@ async def get_user_submissions(
         submissions = (
             (
                 await session.execute(
-                    select(Submission).filter_by(submitter=user.id, deleted=False)
+                    select(Submission).filter_by(
+                        submitter=user.id, deleted=False)
                 )
             )
             .scalars()
@@ -56,13 +60,17 @@ async def get_user_submissions(
 async def get_user_challenges(
     async_session: async_sessionmaker[AsyncSession], user_name: str
 ) -> list[dict[str, Any]]:
+    """
+    Returns list of all user challenges, given user name.
+    """
     result = []
 
     async with async_session as session:
         challenges = (
             (
                 await session.execute(
-                    select(Challenge).filter_by(author=user_name, deleted=False)
+                    select(Challenge).filter_by(
+                        author=user_name, deleted=False)
                 )
             )
             .scalars()
