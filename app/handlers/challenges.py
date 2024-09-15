@@ -204,7 +204,7 @@ async def edit_challenge_handler(
         async_session=async_session,
         user_name=request.user,
     )
-    if (not challenge_belongs_to_user) or (not user_is_admin):
+    if (not challenge_belongs_to_user) and (not user_is_admin):
         raise HTTPException(
             status_code=403,
             detail=f"Challenge <{
