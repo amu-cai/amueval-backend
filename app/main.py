@@ -232,12 +232,18 @@ async def edit_challenge(
     Changes description and deadline for a given challenge.
     """
 
-    request = EditChallengeRerquest(
-        user=user.get("username"),
-        title=challenge_title,
-        description=description,
-        deadline=deadline,
-    )
+    try:
+        request = EditChallengeRerquest(
+            user=user.get("username"),
+            title=challenge_title,
+            description=description,
+            deadline=deadline,
+        )
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=e.json(),
+        )
 
     return await edit_challenge_handler(
         async_session=db,
