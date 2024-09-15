@@ -1,8 +1,11 @@
 import json
 
+from sqlalchemy import (
+    select,
+)
 from sqlalchemy.ext.asyncio import (
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
 )
 
 from database.models import Test
@@ -15,6 +18,9 @@ async def add_tests(
     main_metric_parameters: str,
     additional_metrics: str,
 ) -> dict:
+    """
+    Adds tests for the main metric and additional metric for a given challenge.
+    """
     main_metric_parameters_json = json.loads(main_metric_parameters)
     test_model_main = Test(
         challenge=challenge,
@@ -46,8 +52,51 @@ async def add_tests(
             await session.commit()
 
     return {
-        "success": True,
         "test_main_metric": main_metric,
         "test_additional_metrics": additional_metrics,
-        "message": "Test uploaded successfully",
     }
+
+
+async def challenge_main_metric(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> Test:
+    """
+    Given a challenge returns the main metric.
+    """
+    async with async_session as session:
+        main_test = (
+            (
+                await session.execute(
+                    select(Test).filter_by(
+                        challenge=challenge_id, main_metric=True)
+                )
+            )
+            .scalars()
+            .one()
+        )
+
+    return main_test
+
+
+async def challenge_additional_metrics(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> list[Test]:
+    """
+    Given a challenge returns the list of all additional metrics (without the
+    main metric).
+    """
+    async with async_session as session:
+        additional_tests = (
+            (
+                await session.execute(
+                    select(Test).filter_by(
+                        challenge=challenge_id, main_metric=False)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    return additional_tests

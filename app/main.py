@@ -1,27 +1,35 @@
 import auth.auth as auth
-import challenges.challenges as challenges
 import evaluation.evaluation as evaluation
 import admin.admin as admin
 
-from pathlib import Path
-from typing import Annotated
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import UploadFile, File
+from pydantic import ValidationError, BaseModel
+from typing import Annotated
 
 from admin.models import UserRightsModel
 from auth.models import CreateUserRequest, Token, EditUserRequest
 from database.db_connection import get_engine, get_session
 from database.database import Base
 from sqlalchemy.ext.asyncio import AsyncSession
-from global_helper import (
+from database.challenges import (
     check_challenge_exists,
-    save_expected_file,
 )
-from database.challenges import add_challenge
-from database.tests import add_tests
 from database.users import get_user_submissions, get_user_challenges
+
+from handlers.challenges import (
+    ChallengeInfoResponse,
+    CreateChallengeRerquest,
+    CreateChallengeResponse,
+    EditChallengeRerquest,
+    challenge_info_handler,
+    create_challenge_handler,
+    edit_challenge_handler,
+    get_challenges_handler,
+)
+
 
 engine = get_engine()
 session = get_session(engine)
@@ -55,6 +63,10 @@ app.add_middleware(
 
 user_dependency = Annotated[dict, Depends(auth.get_current_user)]
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
+
+
+class ErrorMessage(BaseModel):
+    message: str
 
 
 @app.on_event("startup")
@@ -123,7 +135,25 @@ async def user_challenges(
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])
 
 
-@challenges_router.post("/create-challenge")
+@challenges_router.post(
+    "/create-challenge",
+    response_model=CreateChallengeResponse,
+    summary="Creates a challenge",
+    description="Creates a challenge given required data and a '.tsv' file.",
+    status_code=201,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        415: {
+            "model": ErrorMessage,
+            "description": "File <filename> is not a TSV file",
+        },
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title cannot be empty or challenge title <challenge title> already exists",
+        },
+    },
+)
 async def create_challenge(
     db: db_dependency,
     user: user_dependency,
@@ -135,62 +165,62 @@ async def create_challenge(
     type: Annotated[str, Form()] = "",
     metric: Annotated[str, Form()] = "",
     parameters: Annotated[str, Form()] = "",
+    # TODO: Check if 'sorting' is still needed
     sorting: Annotated[str, Form()] = "",
     challenge_file: UploadFile = File(...),
     additional_metrics: Annotated[str, Form()] = "",
 ):
-    # TODO: move db methods to their src files and thow exceptions only from
-    # endpoints
-    await auth.check_user_exists(async_session=db, username=user["username"])
+    """
+    Creates challenge from given data. In order to check, if the data is in the
+    right format, it will try to convert input data to @CreateChallengeRerquest
+    model. The rest of the checks is performed in @create_challenge_handler.
+    """
 
-    if challenge_title == "":
+    try:
+        request = CreateChallengeRerquest(
+            author=user["username"],
+            title=challenge_title,
+            source=challenge_source,
+            type=type,
+            description=description,
+            deadline=deadline,
+            award=award,
+            metric=metric,
+            parameters=parameters,
+            sorting=sorting,
+            additional_metrics=additional_metrics,
+        )
+    except ValidationError as e:
         raise HTTPException(
-            status_code=422, detail="Challenge title cannot be empty")
-
-    challenge_exists = await check_challenge_exists(db, challenge_title)
-    if challenge_exists:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Challenge title <{challenge_title}> already exists",
+            status_code=400,
+            detail=e.json(),
         )
 
-    proper_file_extension = ".tsv" == Path(challenge_file.filename).suffix
-    if not proper_file_extension:
-        raise HTTPException(
-            status_code=422,
-            detail=f"File <{challenge_file.filename}> is not a TSV file",
-        )
-
-    await save_expected_file(challenge_file, challenge_title)
-
-    added_challenge = await add_challenge(
+    return await create_challenge_handler(
         async_session=db,
-        username=user.get("username"),
-        title=challenge_title,
-        source=challenge_source,
-        description=description,
-        type=type,
-        deadline=deadline,
-        award=award,
+        request=request,
+        file=challenge_file,
     )
 
-    created_tests = await add_tests(
-        async_session=db,
-        challenge=added_challenge.get("challenge_id"),
-        main_metric=metric,
-        main_metric_parameters=parameters,
-        additional_metrics=additional_metrics,
-    )
 
-    return {
-        "success": True,
-        "message": "Challenge uploaded successfully",
-        "challenge_title": added_challenge.get("challenge_title"),
-        "main_metric": created_tests.get("test_main_metric"),
-    }
-
-
-@challenges_router.put("/edit-challenge")
+@challenges_router.put(
+    "/edit-challenge",
+    summary="Edits a challenge",
+    description="Changes description and deadline for a given challenge. Olny\
+        user that created the challenge and admin are authorized to do this.",
+    status_code=200,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        403: {
+            "model": ErrorMessage,
+            "description": "Challenge <challenge title> does not belong to user <user_name> or user is not an admin",
+        },
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
 async def edit_challenge(
     db: db_dependency,
     user: user_dependency,
@@ -198,53 +228,61 @@ async def edit_challenge(
     description: Annotated[str, Form()] = "",
     deadline: Annotated[str, Form()] = "",
 ):
-    user_name = user["username"]
-    await auth.check_user_exists(async_session=db, username=user_name)
+    """
+    Changes description and deadline for a given challenge.
+    """
 
-    if challenge_title == "":
+    try:
+        request = EditChallengeRerquest(
+            user=user.get("username"),
+            title=challenge_title,
+            description=description,
+            deadline=deadline,
+        )
+    except ValidationError as e:
         raise HTTPException(
-            status_code=422, detail="Challenge title cannot be empty")
-
-    challenge_exists = await check_challenge_exists(db, challenge_title)
-    if not challenge_exists:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Challenge title <{challenge_title}> does not exist",
+            status_code=400,
+            detail=e.json(),
         )
 
-    challenge_belongs_to_user = await challenges.check_challenge_user(
+    return await edit_challenge_handler(
         async_session=db,
-        challenge_title=challenge_title,
-        user_name=user_name,
-    )
-
-    user_is_admin = await auth.check_user_is_admin1(
-        async_session=db,
-        user_name=user_name,
-    )
-    if (not challenge_belongs_to_user) and (not user_is_admin):
-        raise HTTPException(
-            status_code=422,
-            detail=f"Challenge <{
-                challenge_title}> does not belong to user <{user_name}> or user is not an admin",
-        )
-
-    return await challenges.edit_challenge(
-        async_session=db,
-        challenge_title=challenge_title,
-        deadline=deadline,
-        description=description,
+        request=request,
     )
 
 
-@challenges_router.get("/get-challenges")
+@challenges_router.get(
+    "/get-challenges",
+    summary="Gives list of all challenges",
+    description="Returns a list of all active challenges.",
+    status_code=200,
+)
 async def get_challenges(db: db_dependency):
-    return await challenges.all_challenges(async_session=db)
+    challenges = (await get_challenges_handler(async_session=db)).challenges
+
+    # TODO: change the input for the nedpoint for the model and the output, also
+    # to the model
+    challenges_dicts = [c.model_dump() for c in challenges]
+
+    return challenges_dicts
 
 
-@challenges_router.get("/challenge/{challenge}")
+@challenges_router.get(
+    "/challenge/{challenge}",
+    summary="Information about a challenge",
+    description="Returns information for a given challenge.",
+    response_model=ChallengeInfoResponse,
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorMessage,
+            "description": "Challenge <challenge title> does not exist",
+        },
+    },
+)
 async def get_challenge_info(db: db_dependency, challenge: str):
-    return await challenges.get_challenge_info(async_session=db, challenge=challenge)
+    response = await challenge_info_handler(async_session=db, title=challenge)
+    return response.model_dump()
 
 
 evaluation_router = APIRouter(prefix="/evaluation", tags=["evaluation"])

@@ -15,7 +15,7 @@ class Accuracy(MetricBase):
         number.
     sample_weight : list[Any] | None, default None
         Sample weights.
-    sorting: str, default "ascending"
+    sorting : str, default "ascending"
         Information about the value of the metric.
     """
 
