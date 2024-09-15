@@ -30,7 +30,8 @@ async def test_best_score(
         evaluations, key=lambda x: x.score, reverse=(sorting != "descending")
     )
 
-    return sorted_scores[0]
+    best_score = sorted_scores[0].score
+    return best_score
 
 
 async def test_evaluations(

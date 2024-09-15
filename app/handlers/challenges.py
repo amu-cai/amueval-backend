@@ -167,6 +167,9 @@ async def create_challenge_handler(
     # Saving 'expected' file with name of the challenge
     await save_expected_file(file, request.title)
 
+    # Testing, if the main metric works with the data
+    # TODO: check if this can be done after modification to evaluation function
+
     return CreateChallengeResponse(
         challenge_title=added_challenge.get("challenge_title"),
         main_metric=added_tests.get("test_main_metric"),
@@ -181,8 +184,7 @@ async def edit_challenge_handler(
     Allows to edit deadline and description of a challenge.
     """
     if request.title == "":
-        raise HTTPException(
-            status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=request.title
