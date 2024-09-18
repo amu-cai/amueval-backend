@@ -55,6 +55,12 @@ class CreateSubmissionRequest(BaseModel):
     description: str
 
 
+class MetricInfo(BaseModel):
+    name: str
+    parameters: list[dict[str, str]]
+    link: str
+
+
 async def create_submission_handler(
     async_session: async_sessionmaker[AsyncSession],
     request: CreateSubmissionRequest,
@@ -147,7 +153,7 @@ async def create_submission_handler(
         await add_evaluation(
             async_session=async_session,
             test=test_evaluation.get("test_id"),
-            submission=submission.id,
+            submission=submission,
             score=test_evaluation.get("score"),
             timestamp=timestamp,
         )
@@ -175,4 +181,16 @@ async def evaluate(
             metric_name=metric, expected=expected, out=out
         )
 
+    return result
+
+
+async def get_metrics_handler() -> list[MetricInfo]:
+    result = [
+        MetricInfo(
+            name=m,
+            parameters=metric_info(m)["parameters"],
+            link=metric_info(m)["link"],
+        )
+        for m in all_metrics()
+    ]
     return result

@@ -77,7 +77,7 @@ def all_metrics() -> list[str]:
     return Metrics.model_fields.keys()
 
 
-def metric_info(metric_name: str) -> dict:
+def metric_info(metric_name: str) -> dict[str, Any]:
     """Get information about a metric."""
     if metric_name not in all_metrics():
         raise HTTPException(

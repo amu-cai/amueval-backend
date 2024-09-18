@@ -32,6 +32,7 @@ from handlers.challenges import (
 from handlers.evaluations import (
     CreateSubmissionRequest,
     create_submission_handler,
+    get_metrics_handler,
 )
 
 
@@ -336,9 +337,14 @@ async def submit(
     )
 
 
-@evaluation_router.get("/get-metrics")
+@evaluation_router.get(
+    "/get-metrics",
+    summary="List of all available metrics",
+    description="List of all available metrics",
+    status_code=200,
+)
 async def get_metrics():
-    return await evaluation.get_metrics()
+    return await get_metrics_handler()
 
 
 # TODO change
