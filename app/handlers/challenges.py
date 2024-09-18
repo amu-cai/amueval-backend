@@ -105,7 +105,7 @@ class ChallengeInfoResponse(BaseModel):
     award: str
     deleted: bool
     sorting: str
-    participants: list[str]
+    participants: int
     additional_metrics: list[str]
 
 
@@ -184,7 +184,8 @@ async def edit_challenge_handler(
     Allows to edit deadline and description of a challenge.
     """
     if request.title == "":
-        raise HTTPException(status_code=422, detail="Challenge title cannot be empty")
+        raise HTTPException(
+            status_code=422, detail="Challenge title cannot be empty")
 
     challenge_exists = await check_challenge_exists(
         async_session=async_session, title=request.title
@@ -302,9 +303,11 @@ async def challenge_info_handler(
     )
     additional_metrics = [test.metric for test in additional_tests]
 
-    participants = await challenge_participants_names(
-        async_session=async_session,
-        challenge_id=challenge.id,
+    participants = len(
+        await challenge_participants_names(
+            async_session=async_session,
+            challenge_id=challenge.id,
+        )
     )
 
     best_score = await test_best_score(
