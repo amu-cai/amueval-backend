@@ -29,6 +29,10 @@ from handlers.challenges import (
     edit_challenge_handler,
     get_challenges_handler,
 )
+from handlers.evaluations import (
+    CreateSubmissionRequest,
+    create_submission_handler,
+)
 
 
 engine = get_engine()
@@ -288,7 +292,24 @@ async def get_challenge_info(db: db_dependency, challenge: str):
 evaluation_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
 
-@evaluation_router.post("/submit")
+@evaluation_router.post(
+    "/submit",
+    summary="Submitt a solution",
+    description="Submitt a solution with a description.",
+    status_code=200,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        403: {
+            "model": ErrorMessage,
+            "description": "Submission after deadline",
+        },
+        415: {
+            "model": ErrorMessage,
+            "description": "File <filename> is not a TSV file",
+        },
+    },
+)
 async def submit(
     db: db_dependency,
     user: user_dependency,
@@ -296,20 +317,22 @@ async def submit(
     challenge_title: Annotated[str, Form()],
     submission_file: UploadFile = File(...),
 ):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    challenge_exists = await check_challenge_exists(
-        async_session=db, title=challenge_title
-    )
-    if not challenge_exists:
-        raise HTTPException(
-            status_code=422, detail=f"{challenge_title} challenge not exist!"
+    try:
+        request = CreateSubmissionRequest(
+            author=user.get("username"),
+            challenge_title=challenge_title,
+            description=description,
         )
-    return await evaluation.submit(
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=e.json(),
+        )
+
+    return await create_submission_handler(
         async_session=db,
-        username=user["username"],
-        submission_file=submission_file,
-        challenge_title=challenge_title,
-        description=description,
+        request=request,
+        file=submission_file,
     )
 
 

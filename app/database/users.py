@@ -12,8 +12,26 @@ from database.models import User, Submission, Challenge
 from database.submissions import challenge_participants_ids
 
 
+async def get_user(
+    async_session: async_sessionmaker[AsyncSession],
+    user_name: str,
+) -> User:
+    """
+    Returns @User given user name.
+    """
+    async with async_session as session:
+        user = (
+            (await session.execute(select(User).filter_by(username=user_name)))
+            .scalars()
+            .one()
+        )
+
+    return user
+
+
 async def get_user_submissions(
-    async_session: async_sessionmaker[AsyncSession], user_name: str
+    async_session: async_sessionmaker[AsyncSession],
+    user_name: str,
 ) -> list[dict[str, Any]]:
     """
     Returns list of all user submissions, given user name.
@@ -30,8 +48,7 @@ async def get_user_submissions(
         submissions = (
             (
                 await session.execute(
-                    select(Submission).filter_by(
-                        submitter=user.id, deleted=False)
+                    select(Submission).filter_by(submitter=user.id, deleted=False)
                 )
             )
             .scalars()
@@ -58,7 +75,8 @@ async def get_user_submissions(
 
 
 async def get_user_challenges(
-    async_session: async_sessionmaker[AsyncSession], user_name: str
+    async_session: async_sessionmaker[AsyncSession],
+    user_name: str,
 ) -> list[dict[str, Any]]:
     """
     Returns list of all user challenges, given user name.
@@ -69,8 +87,7 @@ async def get_user_challenges(
         challenges = (
             (
                 await session.execute(
-                    select(Challenge).filter_by(
-                        author=user_name, deleted=False)
+                    select(Challenge).filter_by(author=user_name, deleted=False)
                 )
             )
             .scalars()
@@ -94,7 +111,8 @@ async def get_user_challenges(
 
 
 async def check_user_exists(
-    async_session: async_sessionmaker[AsyncSession], user_name: str
+    async_session: async_sessionmaker[AsyncSession],
+    user_name: str,
 ) -> bool:
     """
     Checks, if a given user exists.
@@ -110,7 +128,8 @@ async def check_user_exists(
 
 
 async def check_user_is_admin(
-    async_session: async_sessionmaker[AsyncSession], user_name: str
+    async_session: async_sessionmaker[AsyncSession],
+    user_name: str,
 ):
     """
     Checks, if a given user has admin rights.

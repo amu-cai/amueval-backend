@@ -21,6 +21,9 @@ async def add_challenge(
     deadline: str,
     award: str,
 ) -> dict[str, Any]:
+    """
+    Adds challenge to the table.
+    """
     challenge = Challenge(
         author=user_name,
         title=title,
@@ -31,20 +34,6 @@ async def add_challenge(
         award=award,
         deleted=False,
     )
-
-    """
-    TODO modify 'submit_test' for new files layout
-    try:
-        await submit_test(
-            username=username,
-            description=challenge_input_model.description,
-            challenge=create_challenge_model,
-            sub_file_path=temp_zip_path,
-        )
-    except Exception as err:
-        shutil.rmtree(f"{challenges_dir}/{challenge_folder_name}")
-        raise HTTPException(status_code=422, detail=f"Test submission error {err}")
-    """
 
     async with async_session as session:
         session.add(challenge)

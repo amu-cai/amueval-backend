@@ -30,3 +30,33 @@ async def challenge_participants_ids(
     participants = set([submission.submitter for submission in submissions])
 
     return participants
+
+
+async def add_submission(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge: int,
+    submitter: int,
+    description: str,
+    timestamp: str,
+) -> int:
+    """
+    Adds submission to the submission table.
+    """
+    submission = Submission(
+        challenge=challenge,
+        submitter=submitter,
+        description=description,
+        timestamp=timestamp,
+        deleted=False,
+    )
+
+    async with async_session as session:
+        session.add(submission)
+
+        await session.flush()
+
+        submission_id = submission.id
+
+        await session.commit()
+
+    return submission_id
