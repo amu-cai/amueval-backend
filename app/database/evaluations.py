@@ -81,3 +81,24 @@ async def add_evaluation(
         await session.commit()
 
     return evaluation_id
+
+
+async def submission_evaluations(
+    async_session: async_sessionmaker[AsyncSession],
+    submission_id: int,
+) -> list[Evaluation]:
+    """
+    Given submission id returns a list of all evaluations associated with it.
+    """
+    async with async_session as session:
+        evaluations = (
+            (
+                await session.execute(
+                    select(Evaluation).filter_by(submission=submission_id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    return evaluations

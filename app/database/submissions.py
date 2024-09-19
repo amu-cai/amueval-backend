@@ -60,3 +60,24 @@ async def add_submission(
         await session.commit()
 
     return submission_id
+
+
+async def challenge_submissions(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> list[Submission]:
+    """
+    Returns a list of all submissions for a given challenge id.
+    """
+    async with async_session as session:
+        submissions = (
+            (
+                await session.execute(
+                    select(Submission).filter_by(challenge=challenge_id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    return submissions

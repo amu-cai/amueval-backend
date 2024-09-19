@@ -31,6 +31,8 @@ from handlers.challenges import (
 )
 from handlers.evaluations import (
     CreateSubmissionRequest,
+    SubmissionInfo,
+    challenge_all_submissions_handler,
     create_submission_handler,
     get_metrics_handler,
 )
@@ -347,10 +349,32 @@ async def get_metrics():
     return await get_metrics_handler()
 
 
-# TODO change
-@evaluation_router.get("/{challenge}/all-submissions")
-async def get_all_submissions(db: db_dependency, challenge: str):
-    return await evaluation.get_all_submissions(async_session=db, challenge=challenge)
+@evaluation_router.get(
+    "/{challenge}/all-submissions",
+    summary="List of submissions for a challenge",
+    description="List of all submissions for a given challenge. If user\
+        submitted many submissions, then this list will contain all of them.",
+    status_code=200,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        403: {
+            "model": ErrorMessage,
+            "description": "Submission after deadline",
+        },
+        415: {
+            "model": ErrorMessage,
+            "description": "File <filename> is not a TSV file",
+        },
+    },
+)
+async def get_challenge_all_submissions(db: db_dependency, challenge: str):
+    submissions = await challenge_all_submissions_handler(
+        async_session=db,
+        challenge_title=challenge,
+    )
+    response = [s.model_dump() for s in submissions]
+    return response
 
 
 # TODO change
