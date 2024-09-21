@@ -34,6 +34,7 @@ from handlers.evaluations import (
     challenge_submissions_handler,
     create_submission_handler,
     get_metrics_handler,
+    leaderboard_handler,
 )
 
 
@@ -400,9 +401,25 @@ async def get_user_submissions_for_challenge(
     return response
 
 
-@evaluation_router.get("/{challenge}/leaderboard")
+@evaluation_router.get(
+    "/{challenge}/leaderboard",
+    summary="Leaderboard for a given challenge",
+    description="Leaderboard for a given challenge. Leaderboard consists of\
+        the best submissions (given main metric) per user, sorted by the main\
+        metric.",
+    status_code=200,
+    responses={
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
 async def get_leaderboard(db: db_dependency, challenge: str):
-    return await evaluation.get_leaderboard(async_session=db, challenge_name=challenge)
+    return await leaderboard_handler(
+        async_session=db,
+        challenge_title=challenge,
+    )
 
 
 admin_router = APIRouter(prefix="/admin", tags=["admin"])

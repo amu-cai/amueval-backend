@@ -23,6 +23,7 @@ from database.challenges import (
 from database.evaluations import (
     add_evaluation,
     submission_evaluations,
+    test_evaluations,
 )
 from database.models import (
     User,
@@ -33,6 +34,7 @@ from database.submissions import (
 )
 from database.tests import (
     challenge_all_tests,
+    challenge_main_metric,
 )
 from database.users import (
     get_user,
@@ -75,7 +77,7 @@ class SubmissionInfo(BaseModel):
     description: str
     timestamp: str
     main_metric_result: float
-    additional_metrics_results: list[dict[str, float]]
+    additional_metrics_results: list[dict[str, float]] | None
 
 
 async def create_submission_handler(
@@ -323,3 +325,105 @@ async def challenge_submissions_handler(
     )
 
     return sorted_result
+
+
+async def leaderboard_handler(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_title: str,
+) -> list[SubmissionInfo]:
+    """
+    Given challenge title returns the leaderboard fo rthe challenge, which is
+    a list of submissions. For every user that takes part in the challenge only
+    the best (given main metric) submission is taken into this list. The list
+    is sorted by main metric.
+    """
+    # Checking challenge
+    challenge_exists = await check_challenge_exists(
+        async_session=async_session,
+        title=challenge_title,
+    )
+    if not challenge_exists:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Challenge title {
+                challenge_title} does not exist",
+        )
+
+    challenge = await get_challenge(
+        async_session=async_session,
+        title=challenge_title,
+    )
+
+    main_metric_test = await challenge_main_metric(
+        async_session=async_session,
+        challenge_id=challenge.id,
+    )
+
+    evaluations = await test_evaluations(
+        async_session=async_session,
+        test_id=main_metric_test.id,
+    )
+
+    submissions = await challenge_submissions(
+        async_session=async_session,
+        challenge_id=challenge.id,
+    )
+
+    submitters_ids = set([submission.submitter for submission in submissions])
+    submitters = []
+    for submitter_id in submitters_ids:
+        submitters.append(
+            dict(
+                id=submitter_id,
+                name=await user_name(
+                    async_session=async_session,
+                    user_id=submitter_id,
+                ),
+            )
+        )
+
+    main_metric = getattr(Metrics(), main_metric_test.metric)
+    sorting = main_metric().sorting
+
+    result = []
+    for submitter in submitters:
+        submitter_submissions = [
+            submission.id
+            for submission in submissions
+            if submission.submitter == submitter.get("id")
+        ]
+
+        sorted_submitter_evaluations = sorted(
+            [
+                evaluation
+                for evaluation in evaluations
+                if evaluation.submission in submitter_submissions
+            ],
+            key=lambda x: x.score,
+            reverse=(sorting != "descending"),
+        )
+
+        if sorted_submitter_evaluations:
+            best_result_evaluation = sorted_submitter_evaluations[0]
+            best_result_submission = next(
+                submission
+                for submission in submissions
+                if submission.id == best_result_evaluation.submission
+            )
+
+            result.append(
+                SubmissionInfo(
+                    id=best_result_evaluation.submission,
+                    submitter=submitter.get("name"),
+                    description=best_result_submission.description,
+                    timestamp=best_result_submission.timestamp,
+                    main_metric_result=best_result_evaluation.score,
+                    additional_metrics_results=None,
+                )
+            )
+
+    result = sorted(
+        result, key=lambda d: d.main_metric_result, reverse=(sorting != "descending")
+    )
+
+    return result
