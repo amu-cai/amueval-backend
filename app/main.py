@@ -1,5 +1,4 @@
 import auth.auth as auth
-import evaluation.evaluation as evaluation
 import admin.admin as admin
 
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
@@ -28,6 +27,13 @@ from handlers.challenges import (
     create_challenge_handler,
     edit_challenge_handler,
     get_challenges_handler,
+)
+from handlers.evaluations import (
+    CreateSubmissionRequest,
+    challenge_submissions_handler,
+    create_submission_handler,
+    get_metrics_handler,
+    leaderboard_handler,
 )
 
 
@@ -288,7 +294,24 @@ async def get_challenge_info(db: db_dependency, challenge: str):
 evaluation_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
 
-@evaluation_router.post("/submit")
+@evaluation_router.post(
+    "/submit",
+    summary="Submitt a solution",
+    description="Submitt a solution with a description.",
+    status_code=200,
+    responses={
+        400: {"model": ErrorMessage, "description": "Input data validation error"},
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        403: {
+            "model": ErrorMessage,
+            "description": "Submission after deadline",
+        },
+        415: {
+            "model": ErrorMessage,
+            "description": "File <filename> is not a TSV file",
+        },
+    },
+)
 async def submit(
     db: db_dependency,
     user: user_dependency,
@@ -296,46 +319,106 @@ async def submit(
     challenge_title: Annotated[str, Form()],
     submission_file: UploadFile = File(...),
 ):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    challenge_exists = await check_challenge_exists(
-        async_session=db, title=challenge_title
-    )
-    if not challenge_exists:
-        raise HTTPException(
-            status_code=422, detail=f"{challenge_title} challenge not exist!"
+    try:
+        request = CreateSubmissionRequest(
+            author=user.get("username"),
+            challenge_title=challenge_title,
+            description=description,
         )
-    return await evaluation.submit(
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=e.json(),
+        )
+
+    return await create_submission_handler(
         async_session=db,
-        username=user["username"],
-        submission_file=submission_file,
-        challenge_title=challenge_title,
-        description=description,
+        request=request,
+        file=submission_file,
     )
 
 
-@evaluation_router.get("/get-metrics")
+@evaluation_router.get(
+    "/get-metrics",
+    summary="List of all available metrics",
+    description="List of all available metrics",
+    status_code=200,
+)
 async def get_metrics():
-    return await evaluation.get_metrics()
+    return await get_metrics_handler()
 
 
-# TODO change
-@evaluation_router.get("/{challenge}/all-submissions")
-async def get_all_submissions(db: db_dependency, challenge: str):
-    return await evaluation.get_all_submissions(async_session=db, challenge=challenge)
-
-
-# TODO change
-@evaluation_router.get("/{challenge}/my-submissions")
-async def get_my_submissions(db: db_dependency, challenge: str, user: user_dependency):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    return await evaluation.get_my_submissions(
-        async_session=db, challenge=challenge, user=user
+@evaluation_router.get(
+    "/{challenge}/all-submissions",
+    summary="List of submissions for a challenge",
+    description="List of all submissions for a given challenge. If user\
+        submitted many submissions, then this list will contain all of them.",
+    status_code=200,
+    responses={
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
+async def get_challenge_all_submissions(
+    db: db_dependency,
+    challenge: str,
+):
+    submissions = await challenge_submissions_handler(
+        async_session=db,
+        challenge_title=challenge,
     )
+    response = [s.model_dump() for s in submissions]
+    return response
 
 
-@evaluation_router.get("/{challenge}/leaderboard")
+@evaluation_router.get(
+    "/{challenge}/my-submissions",
+    summary="List of submissions created by a given user",
+    description="List of submissions created by a given user",
+    status_code=200,
+    responses={
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
+async def get_user_submissions_for_challenge(
+    db: db_dependency,
+    challenge: str,
+    user: user_dependency,
+):
+    submissions = await challenge_submissions_handler(
+        async_session=db,
+        challenge_title=challenge,
+        user=user,
+    )
+    response = [s.model_dump() for s in submissions]
+    return response
+
+
+@evaluation_router.get(
+    "/{challenge}/leaderboard",
+    summary="Leaderboard for a given challenge",
+    description="Leaderboard for a given challenge. Leaderboard consists of\
+        the best submissions (given main metric) per user, sorted by the main\
+        metric.",
+    status_code=200,
+    responses={
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
 async def get_leaderboard(db: db_dependency, challenge: str):
-    return await evaluation.get_leaderboard(async_session=db, challenge_name=challenge)
+    return await leaderboard_handler(
+        async_session=db,
+        challenge_title=challenge,
+    )
 
 
 admin_router = APIRouter(prefix="/admin", tags=["admin"])

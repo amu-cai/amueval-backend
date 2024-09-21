@@ -68,8 +68,7 @@ async def challenge_main_metric(
         main_test = (
             (
                 await session.execute(
-                    select(Test).filter_by(
-                        challenge=challenge_id, main_metric=True)
+                    select(Test).filter_by(challenge=challenge_id, main_metric=True)
                 )
             )
             .scalars()
@@ -91,8 +90,7 @@ async def challenge_additional_metrics(
         additional_tests = (
             (
                 await session.execute(
-                    select(Test).filter_by(
-                        challenge=challenge_id, main_metric=False)
+                    select(Test).filter_by(challenge=challenge_id, main_metric=False)
                 )
             )
             .scalars()
@@ -100,3 +98,20 @@ async def challenge_additional_metrics(
         )
 
     return additional_tests
+
+
+async def challenge_all_tests(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_id: int,
+) -> list[Test]:
+    """
+    Given a challenge returns the list of all metrics.
+    """
+    async with async_session as session:
+        all_tests = (
+            (await session.execute(select(Test).filter_by(challenge=challenge_id)))
+            .scalars()
+            .all()
+        )
+
+    return all_tests
