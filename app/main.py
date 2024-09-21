@@ -1,5 +1,4 @@
 import auth.auth as auth
-import evaluation.evaluation as evaluation
 import admin.admin as admin
 
 from fastapi import Depends, FastAPI, status, HTTPException, APIRouter, Form
