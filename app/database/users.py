@@ -47,9 +47,12 @@ async def user_name(
 async def get_user_submissions(
     async_session: async_sessionmaker[AsyncSession],
     user_name: str,
+    challenge_id: int | None = None,
 ) -> list[dict[str, Any]]:
     """
     Returns list of all user submissions, given user name.
+    If challenge name is given, then it returns user submissions for the
+    challenge only.
     """
     result = []
 
@@ -60,15 +63,30 @@ async def get_user_submissions(
             .one()
         )
 
-        submissions = (
-            (
-                await session.execute(
-                    select(Submission).filter_by(submitter=user.id, deleted=False)
+        if challenge_id is None:
+            submissions = (
+                (
+                    await session.execute(
+                        select(Submission).filter_by(submitter=user.id, deleted=False)
+                    )
                 )
+                .scalars()
+                .all()
             )
-            .scalars()
-            .all()
-        )
+        else:
+            submissions = (
+                (
+                    await session.execute(
+                        select(Submission).filter_by(
+                            submitter=user.id,
+                            challenge=challenge_id,
+                            deleted=False,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
 
         for submission in submissions:
             challenge = (

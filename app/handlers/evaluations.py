@@ -17,11 +17,15 @@ from sqlalchemy.ext.asyncio import (
 from typing import Any
 
 from database.challenges import (
+    check_challenge_exists,
     get_challenge,
 )
 from database.evaluations import (
     add_evaluation,
     submission_evaluations,
+)
+from database.models import (
+    User,
 )
 from database.submissions import (
     add_submission,
@@ -32,6 +36,7 @@ from database.tests import (
 )
 from database.users import (
     get_user,
+    get_user_submissions,
     check_user_exists,
     user_name,
 )
@@ -208,13 +213,37 @@ async def get_metrics_handler() -> list[MetricInfo]:
     return result
 
 
-async def challenge_all_submissions_handler(
-    async_session: async_sessionmaker[AsyncSession], challenge_title: str
+async def challenge_submissions_handler(
+    async_session: async_sessionmaker[AsyncSession],
+    challenge_title: str,
+    user: User | None = None,
 ) -> list[SubmissionInfo]:
     """
     Given title of a challenge returns a list of all submissions, where the
     list is sorted according to the main metric.
+    If user is given, then it returns user submissions for the challenge.
     """
+    # Checking challenge
+    challenge_exists = await check_challenge_exists(
+        async_session=async_session,
+        title=challenge_title,
+    )
+    if not challenge_exists:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Challenge title {
+                challenge_title} does not exist",
+        )
+
+    if user is not None:
+        # Checking user
+        user_exists = await check_user_exists(
+            async_session=async_session,
+            user_name=user.username,
+        )
+        if not user_exists:
+            raise HTTPException(status_code=401, detail="User does not exist")
+
     challenge = await get_challenge(
         async_session=async_session,
         title=challenge_title,
@@ -227,10 +256,17 @@ async def challenge_all_submissions_handler(
     main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
     additional_metrics_tests = [test for test in tests if not test.main_metric]
 
-    submissions = await challenge_submissions(
-        async_session=async_session,
-        challenge_id=challenge.id,
-    )
+    if user is None:
+        submissions = await challenge_submissions(
+            async_session=async_session,
+            challenge_id=challenge.id,
+        )
+    else:
+        submissions = await get_user_submissions(
+            async_session=async_session,
+            user_name=user.username,
+            challenge_id=challenge.id,
+        )
 
     results = []
     for submission in submissions:
@@ -239,10 +275,6 @@ async def challenge_all_submissions_handler(
             submission_id=submission.id,
         )
 
-        print("**********************************************")
-        print(f"all_evaluations {all_evaluations}")
-        print(f"submission.id {submission.id}")
-        print("**********************************************")
         main_metric_evaluation = next(
             filter(lambda x: x.test == main_metric_test.id, all_evaluations)
         )

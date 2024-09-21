@@ -31,8 +31,7 @@ from handlers.challenges import (
 )
 from handlers.evaluations import (
     CreateSubmissionRequest,
-    SubmissionInfo,
-    challenge_all_submissions_handler,
+    challenge_submissions_handler,
     create_submission_handler,
     get_metrics_handler,
 )
@@ -356,20 +355,17 @@ async def get_metrics():
         submitted many submissions, then this list will contain all of them.",
     status_code=200,
     responses={
-        400: {"model": ErrorMessage, "description": "Input data validation error"},
-        401: {"model": ErrorMessage, "description": "User does not exist"},
-        403: {
+        422: {
             "model": ErrorMessage,
-            "description": "Submission after deadline",
-        },
-        415: {
-            "model": ErrorMessage,
-            "description": "File <filename> is not a TSV file",
+            "description": "Challenge title <challenge title> does not exist",
         },
     },
 )
-async def get_challenge_all_submissions(db: db_dependency, challenge: str):
-    submissions = await challenge_all_submissions_handler(
+async def get_challenge_all_submissions(
+    db: db_dependency,
+    challenge: str,
+):
+    submissions = await challenge_submissions_handler(
         async_session=db,
         challenge_title=challenge,
     )
@@ -377,13 +373,31 @@ async def get_challenge_all_submissions(db: db_dependency, challenge: str):
     return response
 
 
-# TODO change
-@evaluation_router.get("/{challenge}/my-submissions")
-async def get_my_submissions(db: db_dependency, challenge: str, user: user_dependency):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    return await evaluation.get_my_submissions(
-        async_session=db, challenge=challenge, user=user
+@evaluation_router.get(
+    "/{challenge}/my-submissions",
+    summary="List of submissions created by a given user",
+    description="List of submissions created by a given user",
+    status_code=200,
+    responses={
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        422: {
+            "model": ErrorMessage,
+            "description": "Challenge title <challenge title> does not exist",
+        },
+    },
+)
+async def get_user_submissions_for_challenge(
+    db: db_dependency,
+    challenge: str,
+    user: user_dependency,
+):
+    submissions = await challenge_submissions_handler(
+        async_session=db,
+        challenge_title=challenge,
+        user=user,
     )
+    response = [s.model_dump() for s in submissions]
+    return response
 
 
 @evaluation_router.get("/{challenge}/leaderboard")

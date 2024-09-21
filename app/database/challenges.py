@@ -52,7 +52,8 @@ async def add_challenge(
 
 
 async def check_challenge_exists(
-    async_session: async_sessionmaker[AsyncSession], title: str
+    async_session: async_sessionmaker[AsyncSession],
+    title: str,
 ) -> bool:
     """
     Checks, if a given chellenge exists.
