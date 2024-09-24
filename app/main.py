@@ -135,7 +135,8 @@ async def user_challenges(
     db: db_dependency,
     user: user_dependency,
 ):
-    return await get_user_challenges(async_session=db, user_name=user["username"])
+    user_challenges = await get_user_challenges(async_session=db, user_name=user["username"])
+    return user_challenges
 
 
 challenges_router = APIRouter(prefix="/challenges", tags=["challenges"])

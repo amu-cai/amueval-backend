@@ -241,7 +241,7 @@ async def challenge_submissions_handler(
         # Checking user
         user_exists = await check_user_exists(
             async_session=async_session,
-            user_name=user.username,
+            user_name=user.get("username"),
         )
         if not user_exists:
             raise HTTPException(status_code=401, detail="User does not exist")

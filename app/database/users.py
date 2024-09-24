@@ -10,6 +10,9 @@ from typing import Any
 
 from database.models import User, Submission, Challenge
 from database.submissions import challenge_participants_ids
+from database.tests import (
+    challenge_main_metric,
+)
 
 
 async def get_user(
@@ -127,18 +130,30 @@ async def get_user_challenges(
             .all()
         )
 
-        for challenge in challenges:
-            result.append(
-                dict(
-                    id=challenge.id,
-                    title=challenge.title,
-                    source=challenge.source,
-                    type=challenge.type,
-                    description=challenge.description,
-                    deadline=challenge.deadline,
-                    award=challenge.award,
-                )
+    for challenge in challenges:
+        main_test = await challenge_main_metric(
+            async_session=async_session,
+            challenge_id=challenge.id,
+        )
+        participants_number = len(
+            await challenge_participants_ids(
+                async_session=async_session,
+                challenge_id=challenge.id,
             )
+        )
+        result.append(
+            dict(
+                id=challenge.id,
+                title=challenge.title,
+                source=challenge.source,
+                type=challenge.type,
+                description=challenge.description,
+                deadline=challenge.deadline,
+                award=challenge.award,
+                main_metric=main_test.metric,
+                participants=participants_number,
+            )
+        )
 
     return result
 
