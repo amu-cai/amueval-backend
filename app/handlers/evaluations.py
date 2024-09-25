@@ -77,7 +77,7 @@ class SubmissionInfo(BaseModel):
     description: str
     timestamp: str
     main_metric_result: float
-    additional_metrics_results: list[dict[str, float]] | None
+    additional_metrics_results: list[dict[str, Any]] | None
 
 
 async def create_submission_handler(
