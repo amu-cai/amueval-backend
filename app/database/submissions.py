@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    exists,
     select,
 )
 from sqlalchemy.ext.asyncio import (
@@ -81,3 +82,71 @@ async def challenge_submissions(
         )
 
     return submissions
+
+
+async def check_submission_exists(
+    async_session: async_sessionmaker[AsyncSession],
+    submission_id: int,
+) -> bool:
+    """
+    Checks, if a given submission exists.
+    """
+    async with async_session as session:
+        submission_exist = (
+            await session.execute(
+                exists(Submission).where(Submission.id == submission_id).select()
+            )
+        ).scalar()
+
+    return submission_exist
+
+
+async def get_submission(
+    async_session: async_sessionmaker[AsyncSession],
+    submission_id: int,
+) -> Submission:
+    """
+    Given submission id returns the whole submission.
+    """
+    async with async_session as session:
+        submission = (
+            (await session.execute(select(Submission).filter_by(id=submission_id)))
+            .scalars()
+            .one()
+        )
+
+    return submission
+
+
+async def delete_submissions(
+    async_session: async_sessionmaker[AsyncSession],
+    submissions: list[Submission],
+) -> None:
+    """
+    Deletes the list of given submissions.
+    """
+    async with async_session as session:
+        for submission in submissions:
+            await session.delete(submission)
+
+        await session.commit()
+
+
+async def check_submission_author(
+    async_session: async_sessionmaker[AsyncSession],
+    submission_id: int,
+    user_id: int,
+) -> bool:
+    """
+    Checks, if given submission is created by given user.
+    """
+    async with async_session as session:
+        submission = (
+            (await session.execute(select(Submission).filter_by(id=submission_id)))
+            .scalars()
+            .one()
+        )
+
+        result = submission.submitter == user_id
+
+    return result
