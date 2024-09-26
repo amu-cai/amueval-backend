@@ -150,3 +150,23 @@ async def check_submission_author(
         result = submission.submitter == user_id
 
     return result
+
+
+async def edit_submission(
+    async_session: async_sessionmaker[AsyncSession],
+    submission_id: int,
+    description: str,
+) -> None:
+    """
+    Changes submission description.
+    """
+    async with async_session as session:
+        submission = (
+            (await session.execute(select(Submission).filter_by(id=submission_id)))
+            .scalars()
+            .one()
+        )
+
+        submission.description = description
+
+        await session.commit()
