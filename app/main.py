@@ -313,6 +313,10 @@ evaluation_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
             "model": ErrorMessage,
             "description": "File <filename> is not a TSV file",
         },
+        422: {
+            "model": ErrorMessage,
+            "description": "Submission file has different length than expected file",
+        },
     },
 )
 async def submit(
