@@ -141,6 +141,12 @@ async def create_submission_handler(
             line.strip() for line in (await file.read()).decode("utf-8").splitlines()
         ]
 
+    if len(expected_results) != len(submission_results):
+        raise HTTPException(
+            status_code=422,
+            detail="Submission file has different length than expected file",
+        )
+
     submitter = await get_user(
         async_session=async_session,
         user_name=request.author,
