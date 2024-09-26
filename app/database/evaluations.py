@@ -102,3 +102,17 @@ async def submission_evaluations(
         )
 
     return evaluations
+
+
+async def delete_evaluations(
+    async_session: async_sessionmaker[AsyncSession],
+    evaluations: list[Evaluation],
+) -> None:
+    """
+    Deletes the list of given evaluations.
+    """
+    async with async_session as session:
+        for evaluation in evaluations:
+            await session.delete(evaluation)
+
+        await session.commit()

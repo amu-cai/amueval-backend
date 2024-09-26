@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from fastapi import (
     HTTPException,
+    HTTPResponse,
     UploadFile,
 )
 from pathlib import Path
@@ -22,6 +23,7 @@ from database.challenges import (
 )
 from database.evaluations import (
     add_evaluation,
+    delete_evaluations,
     submission_evaluations,
     test_evaluations,
 )
@@ -31,6 +33,10 @@ from database.models import (
 from database.submissions import (
     add_submission,
     challenge_submissions,
+    check_submission_author,
+    check_submission_exists,
+    delete_submissions,
+    get_submission,
 )
 from database.tests import (
     challenge_all_tests,
@@ -40,6 +46,7 @@ from database.users import (
     get_user,
     get_user_submissions,
     check_user_exists,
+    check_user_is_admin,
     user_name,
 )
 from metrics.metrics import (
@@ -427,3 +434,58 @@ async def leaderboard_handler(
     )
 
     return result
+
+
+async def delete_submission_handler(
+    async_session: async_sessionmaker[AsyncSession],
+    user: User,
+    submission_id: int,
+) -> None:
+    user_exists = await check_user_exists(
+        async_session=async_session,
+        user_name=user.get("name"),
+    )
+    if not user_exists:
+        raise HTTPException(status_code=401, detail="User does not exist")
+
+    submission_exists = await check_submission_exists(
+        async_session=async_session,
+        submission_id=submission_id,
+    )
+    if not submission_exists:
+        raise HTTPException(status_code=422, detail="Submission does not exist")
+
+    submission_belongs_to_user = await check_submission_author(
+        async_session=async_session,
+        submission_id=submission_id,
+        user_id=user.get("id"),
+    )
+    user_is_admin = await check_user_is_admin(
+        async_session=async_session,
+        user_name=user.get("name"),
+    )
+    if (not submission_belongs_to_user) and (not user_is_admin):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Submission does not belong to user or user is not an admin",
+        )
+
+    submission = await get_submission(
+        async_session=async_session,
+        submission_id=submission_id,
+    )
+
+    evaluations = await submission_evaluations(
+        async_session=async_session,
+        submission_id=submission_id,
+    )
+
+    await delete_evaluations(
+        async_session=async_session,
+        evaluations=evaluations,
+    )
+
+    await delete_submissions(
+        async_session=async_session,
+        submissions=[submission]
+    )

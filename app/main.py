@@ -32,6 +32,7 @@ from handlers.evaluations import (
     CreateSubmissionRequest,
     challenge_submissions_handler,
     create_submission_handler,
+    delete_submission_handler,
     get_metrics_handler,
     leaderboard_handler,
 )
@@ -419,6 +420,32 @@ async def get_leaderboard(db: db_dependency, challenge: str):
     return await leaderboard_handler(
         async_session=db,
         challenge_title=challenge,
+    )
+
+
+@evaluation_router.get(
+    "/{submission_id}/delete-submission",
+    summary="Delete submission",
+    description="Deleting submission by the user that created submission or\
+        admin only.",
+    status_code=200,
+    responses={
+        401: {"model": ErrorMessage, "description": "User does not exist"},
+        403: {
+            "model": ErrorMessage,
+            "description": "Submission does not belong to user or user is not an admin",
+        },
+        422: {
+            "model": ErrorMessage,
+            "description": "Submission does not exist",
+        },
+    },
+)
+async def delete_submission(db: db_dependency, user: user_dependency, submission_id: int,):
+    return await delete_submission_handler(
+        async_session=db,
+        user=user,
+        submission_id=submission_id,
     )
 
 
