@@ -273,7 +273,7 @@ async def challenge_submissions_handler(
     else:
         submissions = await get_user_submissions(
             async_session=async_session,
-            user_name=user.username,
+            user_name=user.get("name"),
             challenge_id=challenge.id,
         )
 
