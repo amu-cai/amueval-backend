@@ -36,6 +36,7 @@ from database.submissions import (
     check_submission_author,
     check_submission_exists,
     delete_submissions,
+    edit_submission,
     get_submission,
 )
 from database.tests import (
@@ -489,3 +490,46 @@ async def delete_submission_handler(
         async_session=async_session,
         submissions=[submission]
     )
+
+
+async def edit_submission_handler(
+    async_session: async_sessionmaker[AsyncSession],
+    submission_id: int,
+    user: User,
+    description: str,
+) -> None:
+    """
+    Allows to edit description of a submission.
+    """
+    submission_exists = await check_submission_exists(
+        async_session=async_session,
+        submission_id=submission_id,
+    )
+    if not submission_exists:
+        raise HTTPException(
+            status_code=422,
+            detail=f"SUbmission does not exist",
+        )
+
+    submission_belongs_to_user = await check_submission_author(
+        async_session=async_session,
+        submission_id=submission_id,
+        user_id=user.get("id"),
+    )
+    user_is_admin = await check_user_is_admin(
+        async_session=async_session,
+        user_name=user.get("name"),
+    )
+    if (not submission_belongs_to_user) and (not user_is_admin):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Submission does not belong to user or user is not an admin",
+        )
+
+    await edit_submission(
+        async_session=async_session,
+        submission_id=submission_id,
+        description=description,
+    )
+
+    return None

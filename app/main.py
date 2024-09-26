@@ -33,6 +33,7 @@ from handlers.evaluations import (
     challenge_submissions_handler,
     create_submission_handler,
     delete_submission_handler,
+    edit_submission_handler,
     get_metrics_handler,
     leaderboard_handler,
 )
@@ -423,7 +424,7 @@ async def get_leaderboard(db: db_dependency, challenge: str):
     )
 
 
-@evaluation_router.get(
+@evaluation_router.post(
     "/{submission_id}/delete-submission",
     summary="Delete submission",
     description="Deleting submission by the user that created submission or\
@@ -446,6 +447,40 @@ async def delete_submission(db: db_dependency, user: user_dependency, submission
         async_session=db,
         user=user,
         submission_id=submission_id,
+    )
+
+
+@evaluation_router.put(
+    "/{submission_id}/edit-submission",
+    summary="Edits a submission",
+    description="Changes description for a given submission. Olny user that\
+        created the challenge and admin are authorized to do this.",
+    status_code=200,
+    responses={
+        403: {
+            "model": ErrorMessage,
+            "description": "Submission does not belong to user or user is not an admin",
+        },
+        422: {
+            "model": ErrorMessage,
+            "description": "Submission does not exist",
+        },
+    },
+)
+async def edit_submission(
+    db: db_dependency,
+    user: user_dependency,
+    submission_id: int,
+    description: str = "",
+):
+    """
+    Changes description and for a given submission.
+    """
+
+    return await edit_submission_handler(
+        async_session=db,
+        user=user,
+        description=description,
     )
 
 
