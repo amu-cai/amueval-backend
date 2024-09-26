@@ -273,7 +273,7 @@ async def challenge_submissions_handler(
     else:
         submissions = await get_user_submissions(
             async_session=async_session,
-            user_name=user.get("name"),
+            user_name=user.get("username"),
             challenge_id=challenge.id,
         )
 
@@ -443,7 +443,7 @@ async def delete_submission_handler(
 ) -> None:
     user_exists = await check_user_exists(
         async_session=async_session,
-        user_name=user.get("name"),
+        user_name=user.get("username"),
     )
     if not user_exists:
         raise HTTPException(status_code=401, detail="User does not exist")
@@ -462,7 +462,7 @@ async def delete_submission_handler(
     )
     user_is_admin = await check_user_is_admin(
         async_session=async_session,
-        user_name=user.get("name"),
+        user_name=user.get("username"),
     )
     if (not submission_belongs_to_user) and (not user_is_admin):
         raise HTTPException(
@@ -517,7 +517,7 @@ async def edit_submission_handler(
     )
     user_is_admin = await check_user_is_admin(
         async_session=async_session,
-        user_name=user.get("name"),
+        user_name=user.get("username"),
     )
     if (not submission_belongs_to_user) and (not user_is_admin):
         raise HTTPException(
