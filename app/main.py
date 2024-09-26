@@ -479,6 +479,7 @@ async def edit_submission(
 
     return await edit_submission_handler(
         async_session=db,
+        submission_id=submission_id,
         user=user,
         description=description,
     )
