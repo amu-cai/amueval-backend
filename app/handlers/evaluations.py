@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 from fastapi import (
     HTTPException,
-    HTTPResponse,
     UploadFile,
 )
 from pathlib import Path
