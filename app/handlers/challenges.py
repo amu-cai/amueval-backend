@@ -185,7 +185,7 @@ class CreateChallengeRerquest(BaseModel):
     def description_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Description cannot contain curses")
-        return v.description()
+        return v.title()
 
 
 class CreateChallengeResponse(BaseModel):
@@ -210,7 +210,7 @@ class EditChallengeRerquest(BaseModel):
     def description_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Description cannot contain curses")
-        return v.description()
+        return v.title()
 
 
 class GetChallengeResponse(BaseModel):
