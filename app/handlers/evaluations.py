@@ -326,7 +326,7 @@ async def challenge_submissions_handler(
             if user is None:
                 submitter_name = await user_name(
                     async_session=async_session,
-                    user_id=submission.submitter,
+                    user_id=submission.get("submitter"),
                 )
             else:
                 submitter_name = user.get("username")
