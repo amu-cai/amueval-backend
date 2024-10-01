@@ -164,10 +164,10 @@ FORBIDDEN_WORDS = [
 
 class CreateChallengeRerquest(BaseModel):
     author: str = Field(max_length=15)
-    title: str = Field(max_length=30)
+    title: str = Field(max_length=50)
     source: str
     type: str
-    description: str = Field(max_length=300)
+    description: str = Field(max_length=200)
     deadline: str
     award: str
     metric: str

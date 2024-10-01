@@ -9,6 +9,7 @@ from fastapi import (
 from pathlib import Path
 from pydantic import (
     BaseModel,
+    Field,
 )
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -69,7 +70,7 @@ challenges_dir = f"{STORE}/challenges"
 class CreateSubmissionRequest(BaseModel):
     author: str
     challenge_title: str
-    description: str
+    description: str = Field(max_length=25)
 
 
 class MetricInfo(BaseModel):
