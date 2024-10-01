@@ -272,10 +272,20 @@ async def challenge_submissions_handler(
     additional_metrics_tests = [test for test in tests if not test.main_metric]
 
     if user is None:
-        submissions = await challenge_submissions(
+        submissions_full = await challenge_submissions(
             async_session=async_session,
             challenge_id=challenge.id,
         )
+        submissions = [
+            dict(
+                id=submission.id,
+                challenge=challenge.title,
+                description=submission.description,
+                timestamp=submission.timestamp,
+                submitter=submission.submitter,
+            )
+            for submission in submissions_full
+        ]
     else:
         submissions = await get_user_submissions(
             async_session=async_session,
@@ -287,7 +297,7 @@ async def challenge_submissions_handler(
     for submission in submissions:
         all_evaluations = await submission_evaluations(
             async_session=async_session,
-            submission_id=submission.id,
+            submission_id=submission.get("id"),
         )
 
         main_metric_evaluation = next(
@@ -313,17 +323,20 @@ async def challenge_submissions_handler(
                 )
 
         if main_metric_evaluation is not None:
-            submitter_name = await user_name(
-                async_session=async_session,
-                user_id=submission.submitter,
-            )
+            if user is None:
+                submitter_name = await user_name(
+                    async_session=async_session,
+                    user_id=submission.submitter,
+                )
+            else:
+                submitter_name = user.get("username")
 
             results.append(
                 SubmissionInfo(
-                    id=submission.id,
+                    id=submission.get("id"),
                     submitter=submitter_name,
-                    description=submission.description,
-                    timestamp=submission.timestamp,
+                    description=submission.get("description"),
+                    timestamp=submission.get("timestamp"),
                     main_metric_result=main_metric_evaluation.score,
                     additional_metrics_results=evaluations_additional_metrics,
                 )
