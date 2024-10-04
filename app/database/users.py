@@ -93,7 +93,7 @@ async def get_user_submissions(
 
         for submission in submissions:
             challenge = (
-                (await session.execute(select(Challenge).filter_by(id=submission.id)))
+                (await session.execute(select(Challenge).filter_by(id=submission.challenge)))
                 .scalars()
                 .one()
             )
