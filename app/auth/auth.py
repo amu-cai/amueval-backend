@@ -112,7 +112,7 @@ async def check_user_is_admin1(
     return user_is_admin
 
 
-async def get_current_user_data(token: str) -> dict[str, str]:
+async def get_current_user_data(token: Annotated[str, Depends(oauth2_bearer)]) -> dict[str, str]:
     try:
         split_token = token.split(".")
         # token_header = split_token[0]
