@@ -1,3 +1,6 @@
+import base64
+import json
+
 from datetime import timedelta, datetime
 from typing import Annotated
 from fastapi import Depends, HTTPException
@@ -107,6 +110,35 @@ async def check_user_is_admin1(
         user_is_admin = user.is_admin
 
     return user_is_admin
+
+
+async def get_current_user_data(token: str) -> dict[str, str]:
+    try:
+        split_token = token.split(".")
+        # token_header = split_token[0]
+        # decoded_header = base64.urlsafe_b64decode(token_header + '=' * (-len(token_header) % 4)).decode("utf-8")
+
+        body = split_token[1]
+        decoded_body = base64.urlsafe_b64decode(body + '=' * (-len(token) % 4)).decode("utf-8")
+        body_json = json.loads(decoded_body)
+
+        exp_time = body_json.get("exp")
+        now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).timestamp()
+        if exp_time < now:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired",
+            )
+
+        email = body_json.get("email")
+        username = body_json.get("preferred_username")
+
+        return {"username": username, "email": email}
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect login or password.",
+        )
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
