@@ -41,6 +41,15 @@ from handlers.files import save_expected_file
 from metrics.metrics import Metrics
 
 
+URLS_WHITELIST = [
+    "https://git.wmi.amu.edu.pl",
+    "https://github.com",
+    "https://gitlab.com",
+    "https://codeberg.org",
+    "https://bitbucket.org",
+    "https://sourceforge.net",
+]
+
 FORBIDDEN_WORDS = [
     "chuj", "chuja", "chujek", "chuju", "chujem", "chujnia", "chujowy",
     "chujowa", "chujowe", "cipa", "cipę", "cipe", "cipą", "cipie", "dojebać",
@@ -185,6 +194,12 @@ class CreateChallengeRerquest(BaseModel):
     def description_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Description cannot contain curses")
+        return v.title()
+
+    @validator("source")
+    def source_from_whitelist(cls, v):
+        if not any(v.startswith(url) for url in URLS_WHITELIST):
+            raise ValueError(f"Source has to be from one of: {URLS_WHITELIST}")
         return v.title()
 
 

@@ -16,7 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.challenges import (
     check_challenge_exists,
 )
-from database.users import get_user_submissions, get_user_challenges
+from database.users import (
+    check_user_exists,
+    get_user_submissions,
+    get_user_challenges,
+)
 
 from handlers.challenges import (
     ChallengeInfoResponse,
@@ -69,7 +73,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-user_dependency = Annotated[dict, Depends(auth.get_current_user)]
+user_dependency = Annotated[dict, Depends(auth.get_current_user_data)]
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
 
 
@@ -101,13 +105,43 @@ async def login_for_access_token(
 
 @auth_router.get("/user-rights-info")
 async def get_user_rights_info(db: db_dependency, user: user_dependency):
-    await auth.check_user_exists(async_session=db, username=user["username"])
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     return await auth.get_user_rights_info(async_session=db, username=user["username"])
 
 
 @auth_router.get("/profile-info")
 async def get_profile_info(db: db_dependency, user: user_dependency):
-    await auth.check_user_exists(async_session=db, username=user["username"])
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     return await auth.get_profile_info(async_session=db, username=user["username"])
 
 
@@ -115,7 +149,22 @@ async def get_profile_info(db: db_dependency, user: user_dependency):
 async def edit_user(
     db: db_dependency, user: user_dependency, edit_user_request: EditUserRequest
 ):
-    await auth.check_user_exists(async_session=db, username=user["username"])
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     return await auth.edit_user(
         async_session=db, username=user["username"], edit_user_request=edit_user_request
     )
@@ -129,6 +178,22 @@ async def user_submissions(
     db: db_dependency,
     user: user_dependency,
 ):
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     return await get_user_submissions(async_session=db, user_name=user["username"])
 
 
@@ -137,6 +202,22 @@ async def user_challenges(
     db: db_dependency,
     user: user_dependency,
 ):
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     user_challenges = await get_user_challenges(async_session=db, user_name=user["username"])
     return user_challenges
 
@@ -184,6 +265,21 @@ async def create_challenge(
     right format, it will try to convert input data to @CreateChallengeRerquest
     model. The rest of the checks is performed in @create_challenge_handler.
     """
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
 
     try:
         request = CreateChallengeRerquest(
@@ -240,6 +336,21 @@ async def edit_challenge(
     """
     Changes description and deadline for a given challenge.
     """
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
 
     try:
         request = EditChallengeRerquest(
@@ -326,6 +437,22 @@ async def submit(
     challenge_title: Annotated[str, Form()],
     submission_file: UploadFile = File(...),
 ):
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     try:
         request = CreateSubmissionRequest(
             author=user.get("username"),
@@ -398,10 +525,26 @@ async def get_user_submissions_for_challenge(
     challenge: str,
     user: user_dependency,
 ):
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     submissions = await challenge_submissions_handler(
         async_session=db,
         challenge_title=challenge,
-        user=user,
+        user_name=user["username"],
     )
     response = [s.model_dump() for s in submissions]
     return response
@@ -446,10 +589,30 @@ async def get_leaderboard(db: db_dependency, challenge: str):
         },
     },
 )
-async def delete_submission(db: db_dependency, user: user_dependency, submission_id: int,):
+async def delete_submission(
+    db: db_dependency,
+    user: user_dependency,
+    submission_id: int,
+):
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     return await delete_submission_handler(
         async_session=db,
-        user=user,
+        user_name=user["username"],
         submission_id=submission_id,
     )
 
@@ -480,11 +643,26 @@ async def edit_submission(
     """
     Changes description and for a given submission.
     """
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
 
     return await edit_submission_handler(
         async_session=db,
         submission_id=submission_id,
-        user=user,
+        user_name=user["username"],
         description=description,
     )
 
@@ -494,7 +672,22 @@ admin_router = APIRouter(prefix="/admin", tags=["admin"])
 
 @admin_router.get("/users-settings")
 async def get_user_settings(db: db_dependency, user: user_dependency):
-    await auth.check_user_exists(async_session=db, username=user["username"])
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     await auth.check_user_is_admin(async_session=db, username=user["username"])
     return await admin.get_users_settings(async_session=db)
 
@@ -503,8 +696,22 @@ async def get_user_settings(db: db_dependency, user: user_dependency):
 async def user_rights_update(
     db: db_dependency, user: user_dependency, user_rights: UserRightsModel
 ):
-    await auth.check_user_exists(async_session=db, username=user["username"])
-    await auth.check_user_exists(async_session=db, username=user_rights.username)
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     await auth.check_user_is_admin(async_session=db, username=user["username"])
     if not user_rights.is_admin and user_rights.username == user["username"]:
         raise HTTPException(
@@ -518,6 +725,22 @@ async def user_rights_update(
 async def delete_challenge(
     db: db_dependency, user: user_dependency, challenge_title: str
 ):
+    user_exists = await check_user_exists(
+        async_session=db,
+        user_name=user["username"],
+    )
+
+    if not user_exists:
+        create_user_request = CreateUserRequest(
+            email=user["email"],
+            username=user["username"],
+            password="123456admin654321",
+        )
+        await auth.create_user(
+            async_session=db,
+            create_user_request=create_user_request,
+        )
+
     await auth.check_user_is_admin(async_session=db, username=user["username"])
 
     challenge_exists = await check_challenge_exists(db, challenge_title)

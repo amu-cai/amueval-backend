@@ -27,9 +27,6 @@ from database.evaluations import (
     submission_evaluations,
     test_evaluations,
 )
-from database.models import (
-    User,
-)
 from database.submissions import (
     add_submission,
     challenge_submissions,
@@ -48,7 +45,7 @@ from database.users import (
     get_user_submissions,
     check_user_exists,
     check_user_is_admin,
-    user_name,
+    get_user_name,
 )
 from metrics.metrics import (
     Metrics,
@@ -232,7 +229,7 @@ async def get_metrics_handler() -> list[MetricInfo]:
 async def challenge_submissions_handler(
     async_session: async_sessionmaker[AsyncSession],
     challenge_title: str,
-    user: User | None = None,
+    user_name: str | None = None,
 ) -> list[SubmissionInfo]:
     """
     Given title of a challenge returns a list of all submissions, where the
@@ -251,11 +248,11 @@ async def challenge_submissions_handler(
                 challenge_title} does not exist",
         )
 
-    if user is not None:
+    if user_name is not None:
         # Checking user
         user_exists = await check_user_exists(
             async_session=async_session,
-            user_name=user.get("username"),
+            user_name=user_name,
         )
         if not user_exists:
             raise HTTPException(status_code=401, detail="User does not exist")
@@ -272,7 +269,7 @@ async def challenge_submissions_handler(
     main_metric_test = next(filter(lambda x: x.main_metric is True, tests))
     additional_metrics_tests = [test for test in tests if not test.main_metric]
 
-    if user is None:
+    if user_name is None:
         submissions_full = await challenge_submissions(
             async_session=async_session,
             challenge_id=challenge.id,
@@ -290,7 +287,7 @@ async def challenge_submissions_handler(
     else:
         submissions = await get_user_submissions(
             async_session=async_session,
-            user_name=user.get("username"),
+            user_name=user_name,
             challenge_id=challenge.id,
         )
 
@@ -324,13 +321,13 @@ async def challenge_submissions_handler(
                 )
 
         if main_metric_evaluation is not None:
-            if user is None:
-                submitter_name = await user_name(
+            if user_name is None:
+                submitter_name = await get_user_name(
                     async_session=async_session,
                     user_id=submission.get("submitter"),
                 )
             else:
-                submitter_name = user.get("username")
+                submitter_name = user_name
 
             results.append(
                 SubmissionInfo(
@@ -402,7 +399,7 @@ async def leaderboard_handler(
         submitters.append(
             dict(
                 id=submitter_id,
-                name=await user_name(
+                name=await get_user_name(
                     async_session=async_session,
                     user_id=submitter_id,
                 ),
@@ -458,12 +455,12 @@ async def leaderboard_handler(
 
 async def delete_submission_handler(
     async_session: async_sessionmaker[AsyncSession],
-    user: User,
+    user_name: str,
     submission_id: int,
 ) -> None:
     user_exists = await check_user_exists(
         async_session=async_session,
-        user_name=user.get("username"),
+        user_name=user_name,
     )
     if not user_exists:
         raise HTTPException(status_code=401, detail="User does not exist")
@@ -475,14 +472,18 @@ async def delete_submission_handler(
     if not submission_exists:
         raise HTTPException(status_code=422, detail="Submission does not exist")
 
+    user = await get_user(
+        async_session=async_session,
+        user_name=user_name,
+    )
     submission_belongs_to_user = await check_submission_author(
         async_session=async_session,
         submission_id=submission_id,
-        user_id=user.get("id"),
+        user_id=user.id,
     )
     user_is_admin = await check_user_is_admin(
         async_session=async_session,
-        user_name=user.get("username"),
+        user_name=user_name,
     )
     if (not submission_belongs_to_user) and (not user_is_admin):
         raise HTTPException(
@@ -514,7 +515,7 @@ async def delete_submission_handler(
 async def edit_submission_handler(
     async_session: async_sessionmaker[AsyncSession],
     submission_id: int,
-    user: User,
+    user_name: str,
     description: str,
 ) -> None:
     """
@@ -530,14 +531,18 @@ async def edit_submission_handler(
             detail=f"SUbmission does not exist",
         )
 
+    user = await get_user(
+        async_session=async_session,
+        user_name=user_name,
+    )
     submission_belongs_to_user = await check_submission_author(
         async_session=async_session,
         submission_id=submission_id,
-        user_id=user.get("id"),
+        user_id=user.id,
     )
     user_is_admin = await check_user_is_admin(
         async_session=async_session,
-        user_name=user.get("username"),
+        user_name=user_name,
     )
     if (not submission_belongs_to_user) and (not user_is_admin):
         raise HTTPException(
