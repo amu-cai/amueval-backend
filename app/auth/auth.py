@@ -135,7 +135,7 @@ async def get_current_user_data(token: Annotated[str, Depends(oauth2_bearer)]) -
         username = body_json.get("preferred_username")
 
         return {"username": username, "email": email}
-    except JWTError:
+    except:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect login or password.",
