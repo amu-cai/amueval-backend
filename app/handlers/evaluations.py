@@ -27,9 +27,6 @@ from database.evaluations import (
     submission_evaluations,
     test_evaluations,
 )
-from database.models import (
-    User,
-)
 from database.submissions import (
     add_submission,
     challenge_submissions,
@@ -48,7 +45,7 @@ from database.users import (
     get_user_submissions,
     check_user_exists,
     check_user_is_admin,
-    user_name,
+    get_user_name,
 )
 from metrics.metrics import (
     Metrics,
@@ -325,7 +322,7 @@ async def challenge_submissions_handler(
 
         if main_metric_evaluation is not None:
             if user_name is None:
-                submitter_name = await user_name(
+                submitter_name = await get_user_name(
                     async_session=async_session,
                     user_id=submission.get("submitter"),
                 )
@@ -402,7 +399,7 @@ async def leaderboard_handler(
         submitters.append(
             dict(
                 id=submitter_id,
-                name=await user_name(
+                name=await get_user_name(
                     async_session=async_session,
                     user_id=submitter_id,
                 ),

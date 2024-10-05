@@ -32,7 +32,7 @@ async def get_user(
     return user
 
 
-async def user_name(
+async def get_user_name(
     async_session: async_sessionmaker[AsyncSession],
     user_id: int,
 ) -> str:
