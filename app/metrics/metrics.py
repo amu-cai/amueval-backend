@@ -35,6 +35,9 @@ from metrics.precision import Precision
 from metrics.r2 import R2
 from metrics.recall import Recall
 from metrics.rmse import RMSE
+from metrics.precision_string import PrecisionString
+from metrics.recall_string import RecallString
+from metrics.f1_score_string import F1String
 
 
 class Metrics(BaseModel):
@@ -70,7 +73,10 @@ class Metrics(BaseModel):
     r2: MetricBase = R2
     recall: MetricBase = Recall
     rmse: MetricBase = RMSE
-
+    f1_string: MetricBase = F1String
+    recall_string: MetricBase = RecallString
+    precision_string: MetricBase = PrecisionString
+    
 
 def all_metrics() -> list[str]:
     """Show all available metrics."""
