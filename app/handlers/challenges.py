@@ -167,17 +167,16 @@ FORBIDDEN_WORDS = [
     "zapierdolą", "zapierdola", "zapierniczać", "zapierniczający", "zasrać",
     "zasranym", "zasrywać", "zasrywający", "zesrywać", "zesrywający", "zjebać",
     "zjebac", "zjebał", "zjebal", "zjebała", "zjebala", "zjebana", "zjebią",
-    "zjebali", "zjeby",
-    "anal", "anus", "arse", "ass", "ballsack", "balls", "bastard", "bitch",
-    "biatch", "bloody", "blowjob", "blow job", "bollock", "bollok", "boner",
-    "boob", "bugger", "bum", "butt", "buttplug", "clitoris", "cock", "coon",
-    "crap", "cunt", "damn", "dick", "dildo", "dyke", "fag", "feck", "fellate",
+    "zjebali", "zjeby", "anus", "ballsack", "bastard", "bitch",
+    "biatch", "blowjob", "blow job", "bollock", "bollok", "boner",
+    "boob", "bugger", "buttplug", "clitoris", "cock", "coon",
+    "crap", "cunt", "damn", "dick", "dildo", "dyke", "feck", "fellate",
     "fellatio", "felching", "fuck", "f u c k", "fudgepacker", "fudge packer",
     "flange", "Goddamn", "God damn", "hell", "homo", "jerk", "jizz", "knobend",
     "knob end", "labia", "lmao", "lmfao", "muff", "nigger", "nigga", "omg",
-    "penis", "piss", "poop", "prick", "pube", "pussy", "queer", "scrotum",
-    "sex", "shit", "s hit", "sh1t", "slut", "smegma", "spunk", "tit", "tosser",
-    "turd", "twat", "vagina", "wank", "whore", "wtf"
+    "penis", "piss", "poop", "prick", "pussy", "queer", "scrotum", 
+    "shit", "s hit", "sh1t", "slut", "smegma", "spunk", "tosser",
+    "turd", "twat", "vagina", "whore", "wtf"
 ]
 
 
