@@ -169,14 +169,12 @@ FORBIDDEN_WORDS = [
     "zjebac", "zjebał", "zjebal", "zjebała", "zjebala", "zjebana", "zjebią",
     "zjebali", "zjeby", "anus", "ballsack", "bastard", "bitch",
     "biatch", "blowjob", "blow job", "bollock", "bollok", "boner",
-    "boob", "bugger", "buttplug", "clitoris", "cock", "coon",
-    "crap", "cunt", "damn", "dick", "dildo", "dyke", "feck", "fellate",
+    "boob", "bugger", "buttplug", "clitoris", "cock", "crap", "cunt", "damn", "dick", "dildo", "dyke", "feck", "fellate",
     "fellatio", "felching", "fuck", "f u c k", "fudgepacker", "fudge packer",
-    "flange", "Goddamn", "God damn", "hell", "homo", "jerk", "jizz", "knobend",
+    "flange", "Goddamn", "God damn", "jerk", "knobend",
     "knob end", "labia", "lmao", "lmfao", "muff", "nigger", "nigga", "omg",
     "penis", "piss", "poop", "prick", "pussy", "queer", "scrotum", 
-    "shit", "s hit", "sh1t", "slut", "smegma", "spunk", "tosser",
-    "turd", "twat", "vagina", "whore", "wtf"
+    "shit", "s hit", "sh1t", "smegma", "spunk", "tosser", "twat", "vagina", "whore", "wtf"
 ]
 
 
