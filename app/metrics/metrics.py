@@ -10,6 +10,7 @@ from metrics.average_precision import AveragePrecision
 from metrics.balanced_accuracy import BalancedAccuracy
 from metrics.bleu import Bleu
 from metrics.brier import Brier
+from metrics.cer import CER
 from metrics.cohen_kappa import CohenKappa
 from metrics.d2_absolute_error import D2AbsoluteError
 from metrics.d2_pinball import D2Pinball
@@ -35,6 +36,7 @@ from metrics.precision import Precision
 from metrics.r2 import R2
 from metrics.recall import Recall
 from metrics.rmse import RMSE
+from metrics.wer import WER
 from metrics.precision_string import PrecisionString
 from metrics.recall_string import RecallString
 from metrics.f1_score_string import F1String
@@ -48,6 +50,7 @@ class Metrics(BaseModel):
     balanced_accuracy: MetricBase = BalancedAccuracy
     bleu: MetricBase = Bleu
     brier: MetricBase = Brier
+    cer: MetricBase = CER
     cohen_kappa: MetricBase = CohenKappa
     d2_absolute_error: MetricBase = D2AbsoluteError
     d2_pinball: MetricBase = D2Pinball
@@ -73,6 +76,7 @@ class Metrics(BaseModel):
     r2: MetricBase = R2
     recall: MetricBase = Recall
     rmse: MetricBase = RMSE
+    wer: MetricBase = WER
     f1_string: MetricBase = F1String
     recall_string: MetricBase = RecallString
     precision_string: MetricBase = PrecisionString
