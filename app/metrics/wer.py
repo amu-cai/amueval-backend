@@ -1,4 +1,3 @@
-from typing import Any
 from fastapi import HTTPException
 from metrics.metric_base import MetricBase
 from jiwer import wer
@@ -16,7 +15,13 @@ class WER(MetricBase):
         return {
             "name": "word error rate",
             "link": "https://github.com/jitsi/jiwer/blob/master/docs/usage.md",
-            "parameters": [{}],
+            "parameters": [
+                {
+                    "name": "dummy_param",
+                    "data_type": "None",
+                    "default_value": "None",
+                },
+            ],
         }
 
     def calculate(
