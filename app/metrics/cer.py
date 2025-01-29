@@ -9,7 +9,11 @@ class CER(MetricBase):
 
     Parameters
     ----------
+    sorting: str, default "descending"
+        Information about the value of the metric.
     """
+
+    sorting: str = "descending"
 
     def info(self) -> dict:
         return {
