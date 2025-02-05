@@ -98,6 +98,30 @@ async def check_user_is_admin(
         )
 
 
+async def check_challenge_owner(
+    async_session: async_sessionmaker[AsyncSession], username: str, challenge_title: str
+):
+    async with async_session as session:
+        challenge = (
+            (
+                await session.execute(
+                    select(Challenge)
+                    .filter_by(title=challenge_title)
+                    .filter_by(author=username)
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+    if not challenge:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied, you are not the owner of this challenge",
+        )
+    return challenge
+
+
 async def check_user_is_admin1(
     async_session: async_sessionmaker[AsyncSession], user_name: str
 ):
