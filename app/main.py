@@ -741,7 +741,12 @@ async def delete_challenge(
             create_user_request=create_user_request,
         )
 
-    await auth.check_user_is_admin(async_session=db, username=user["username"])
+    try:
+        await auth.check_user_is_admin(async_session=db, username=user["username"])
+    except HTTPException:
+        await auth.check_challenge_owner(
+            async_session=db, username=user["username"], challenge_title=challenge_title
+        )
 
     challenge_exists = await check_challenge_exists(db, challenge_title)
     if not challenge_exists:
