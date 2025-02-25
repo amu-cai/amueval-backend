@@ -57,7 +57,7 @@ class FBetaGEC(MetricBase):
         try:
             expected = [x.split("X_CORRECTION_SPLIT_X") for x in expected]
             sources = [x[0] for x in expected]
-            targets = [x[1] for x in targets]
+            targets = [x[1] for x in expected]
 
             best_dict, precision, recall, f_score = get_fbeta_score(out, targets, sources, self.beta)
             return f_score
