@@ -45,7 +45,7 @@ from metrics.fbeta_gec_raw import FBetaGECRaw
 from metrics.precision_gec import PrecisionGEC
 from metrics.precision_gec_raw import PrecisionGECRaw
 from metrics.recall_gec import RecallGEC
-from metrics.recall_rec_raw import RecallGECRaw
+from metrics.recall_gec_raw import RecallGECRaw
 
 class Metrics(BaseModel):
     """All available metrics."""
