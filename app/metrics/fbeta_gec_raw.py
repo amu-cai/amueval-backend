@@ -27,7 +27,7 @@ class FBetaGECRaw(MetricBase):
 
     def info(self) -> dict:
         return {
-            "name": "F1 GEC score",
+            "name": "F1 GEC score raw",
             "link": "https://github.com/chrisjbryant/errant",
             "parameters": [
                 {
