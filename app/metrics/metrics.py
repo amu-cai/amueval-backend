@@ -41,7 +41,11 @@ from metrics.precision_string import PrecisionString
 from metrics.recall_string import RecallString
 from metrics.f1_score_string import F1String
 from metrics.fbeta_gec import FBetaGEC
-
+from metrics.fbeta_gec_raw import FBetaGECRaw
+from metrics.precision_gec import PrecisionGEC
+from metrics.precision_gec_raw import PrecisionGECRaw
+from metrics.recall_gec import RecallGEC
+from metrics.recall_rec_raw import RecallGECRaw
 
 class Metrics(BaseModel):
     """All available metrics."""
@@ -82,7 +86,11 @@ class Metrics(BaseModel):
     recall_string: MetricBase = RecallString
     precision_string: MetricBase = PrecisionString
     fbeta_gec: MetricBase = FBetaGEC
-    
+    fbeta_gec_raw: MetricBase = FBetaGECRaw
+    precision_gec: MetricBase = PrecisionGEC
+    precision_gec_raw: MetricBase = PrecisionGECRaw
+    recall_gec: MetricBase = RecallGEC
+    recall_gec_raw: MetricBase = RecallGECRaw
 
 def all_metrics() -> list[str]:
     """Show all available metrics."""
