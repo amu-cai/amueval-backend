@@ -18,7 +18,7 @@ class RecallGECRaw(MetricBase):
 
     def info(self) -> dict:
         return {
-            "name": "Recall GEC score",
+            "name": "Recall GEC score raw",
             "link": "https://github.com/chrisjbryant/errant",
             "parameters": [
                 {
