@@ -51,7 +51,7 @@ class RecallGECRaw(MetricBase):
         try:
             expected = [x.split("X_CORRECTION_SPLIT_X") for x in expected]
             sources = [x[0] for x in expected]
-            targets = [x[1] for x in targets]
+            targets = [x[1] for x in expected]
 
             out = [re.sub(r'[^a-zA-Z0-9 ]','', v.lower()) for v in out]
             sources = [re.sub(r'[^a-zA-Z0-9 ]','', v.lower()) for v in sources]
