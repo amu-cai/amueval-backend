@@ -18,7 +18,7 @@ class PrecisionGECRaw(MetricBase):
 
     def info(self) -> dict:
         return {
-            "name": "Precision GEC score",
+            "name": "Precision GEC score raw",
             "link": "https://github.com/chrisjbryant/errant",
             "parameters": [
                 {
