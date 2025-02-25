@@ -40,6 +40,7 @@ from metrics.wer import WER
 from metrics.precision_string import PrecisionString
 from metrics.recall_string import RecallString
 from metrics.f1_score_string import F1String
+from metrics.fbeta_gec import FBetaGEC
 
 
 class Metrics(BaseModel):
@@ -80,6 +81,7 @@ class Metrics(BaseModel):
     f1_string: MetricBase = F1String
     recall_string: MetricBase = RecallString
     precision_string: MetricBase = PrecisionString
+    fbeta_gec: MetricBase = FBetaGEC
     
 
 def all_metrics() -> list[str]:
