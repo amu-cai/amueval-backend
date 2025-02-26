@@ -86,6 +86,23 @@ class SubmissionInfo(BaseModel):
     additional_metrics_results: list[dict[str, Any]] | None
 
 
+async def run_evaluations(tests, submission_results, expected_results):
+    tasks = [
+        evaluate(
+            metric=test.metric,
+            parameters=test.metric_parameters,
+            out=submission_results,
+            expected=expected_results,
+        )
+        for test in tests
+    ]
+
+    scores = await asyncio.gather(*tasks)  # Run all evaluations in parallel
+
+    # Attach scores to their corresponding test IDs
+    return [{"score": score, "test_id": test.id} for score, test in zip(scores, tests)]
+    
+
 async def create_submission_handler(
     async_session: async_sessionmaker[AsyncSession],
     request: CreateSubmissionRequest,
@@ -166,19 +183,7 @@ async def create_submission_handler(
         challenge_id=challenge.id,
     )
 
-    tests_evaluations = []
-    for test in tests:
-        tests_evaluations.append(
-            {
-                "score": await evaluate(
-                    metric=test.metric,
-                    parameters=test.metric_parameters,
-                    out=submission_results,
-                    expected=expected_results,
-                ),
-                "test_id": test.id,
-            }
-        )
+    tests_evaluations = await run_evaluations(tests, submission_results, expected_results)
 
     for test_evaluation in tests_evaluations:
         await add_evaluation(
