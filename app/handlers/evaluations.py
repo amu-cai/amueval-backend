@@ -1,5 +1,6 @@
 import json
 import os
+import asyncio
 
 from datetime import datetime
 from fastapi import (
@@ -199,16 +200,16 @@ async def evaluate(
     metric: str, parameters: str, out: list[Any], expected: list[Any]
 ) -> float:
     """
-    Evaluates the metric with given parameters.
+    Evaluates the metric with given parameters asynchronously.
     """
     if parameters and parameters != "{}":
         params_dict = json.loads(parameters)
-        result = calculate_metric(
-            metric_name=metric, expected=expected, out=out, params=params_dict
+        result = await asyncio.to_thread(
+            calculate_metric, metric, expected, out, params_dict
         )
     else:
-        result = calculate_default_metric(
-            metric_name=metric, expected=expected, out=out
+        result = await asyncio.to_thread(
+            calculate_default_metric, metric, expected, out
         )
 
     return result
