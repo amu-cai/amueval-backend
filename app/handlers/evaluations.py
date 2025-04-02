@@ -303,10 +303,12 @@ async def challenge_submissions_handler(
             async_session=async_session,
             submission_id=submission.get("id"),
         )
-
         main_metric_evaluation = next(
-            filter(lambda x: x.test == main_metric_test.id, all_evaluations)
+            (evaluation for evaluation in all_evaluations if evaluation.test == main_metric_test.id), None
         )
+        # main_metric_evaluation = next(
+        #     filter(lambda x: x.test == main_metric_test.id, all_evaluations)
+        # )
 
         evaluations_additional_metrics = []
         for evaluation in all_evaluations:
