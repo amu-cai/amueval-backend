@@ -195,19 +195,19 @@ class CreateChallengeRerquest(BaseModel):
     def title_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Title cannot contain curses")
-        return v.title()
+        return v
 
     @validator("description")
     def description_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Description cannot contain curses")
-        return v.title()
+        return v
 
     @validator("source")
     def source_from_whitelist(cls, v):
         if not any(v.startswith(url) for url in URLS_WHITELIST):
             raise ValueError(f"Source has to be from one of: {URLS_WHITELIST}")
-        return v.title()
+        return v
 
 
 class CreateChallengeResponse(BaseModel):
