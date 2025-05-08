@@ -82,7 +82,7 @@ class SubmissionInfo(BaseModel):
     submitter: str
     description: str
     timestamp: str
-    main_metric_result: float
+    main_metric_result: Optional[float]
     additional_metrics_results: list[dict[str, Any]] | None
     place: Optional[int] = None
 
@@ -233,6 +233,13 @@ async def get_metrics_handler() -> list[MetricInfo]:
     return result
 
 
+def hide_results(challenge):
+    deadline = datetime.fromisoformat(challenge.deadline)
+    now = datetime.now(deadline.tzinfo)
+    return (
+        challenge.description.endswith("<PRIVATE-TEST>") and
+        deadline >= now
+    )
 async def challenge_submissions_handler(
     async_session: async_sessionmaker[AsyncSession],
     challenge_title: str,
@@ -357,7 +364,27 @@ async def challenge_submissions_handler(
         reverse=(sorting != "descending"),
     )
 
-    return sorted_result
+    final_result = []
+    for submission in sorted_result:
+        if hide_results(challenge):
+            masked_additional_metrics = [
+                {"name": metric["name"], "score": None}
+                for metric in submission.additional_metrics_results
+            ]
+            final_result.append(
+                SubmissionInfo(
+                    id=submission.id,
+                    submitter=submission.submitter,
+                    description=submission.description,
+                    timestamp=submission.timestamp,
+                    main_metric_result=None,
+                    additional_metrics_results=masked_additional_metrics,
+                )
+            )
+        else:
+            final_result.append(submission)
+
+    return final_result
 
 
 async def leaderboard_handler(

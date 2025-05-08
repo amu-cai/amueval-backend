@@ -26,7 +26,7 @@ from handlers.challenges import (
     ChallengeInfoResponse,
     CreateChallengeRerquest,
     CreateChallengeResponse,
-    EditChallengeRerquest,
+    EditChallengeRequest,
     challenge_info_handler,
     create_challenge_handler,
     edit_challenge_handler,
@@ -353,7 +353,7 @@ async def edit_challenge(
         )
 
     try:
-        request = EditChallengeRerquest(
+        request = EditChallengeRequest(
             user=user.get("username"),
             title=challenge_title,
             description=description,

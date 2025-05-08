@@ -216,7 +216,7 @@ class CreateChallengeResponse(BaseModel):
     main_metric: str
 
 
-class EditChallengeRerquest(BaseModel):
+class EditChallengeRequest(BaseModel):
     user: str
     title: str = Field(max_length=30)
     description: str = Field(max_length=300)
@@ -226,13 +226,13 @@ class EditChallengeRerquest(BaseModel):
     def title_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Title cannot contain curses")
-        return v.title()
+        return v
 
     @validator("description")
     def description_does_not_contain_curses(cls, v):
         if any(word in v for word in FORBIDDEN_WORDS):
             raise ValueError("Description cannot contain curses")
-        return v.title()
+        return v
 
 
 class GetChallengeResponse(BaseModel):
@@ -340,11 +340,12 @@ async def create_challenge_handler(
 
 async def edit_challenge_handler(
     async_session: async_sessionmaker[AsyncSession],
-    request: EditChallengeRerquest,
+    request: EditChallengeRequest,
 ) -> None:
     """
     Allows to edit deadline and description of a challenge.
     """
+    print(request)
     if request.title == "":
         raise HTTPException(
             status_code=422, detail="Challenge title cannot be empty")
