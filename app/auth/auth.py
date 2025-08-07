@@ -245,7 +245,7 @@ async def create_user(
         username=create_user_request.username,
         hashed_password=bcrypt_context.hash(create_user_request.password),
         is_admin=is_admin,
-        is_author=True,
+        is_author=False,
     )
 
     async with async_session as session:
