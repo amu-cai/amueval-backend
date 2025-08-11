@@ -49,6 +49,9 @@ from metrics.recall_gec_raw import RecallGECRaw
 from metrics.bleu_pe import BleuPE
 from metrics.chrf import Chrf
 from metrics.chrf_pp import ChrfPP
+from metrics.f1_proof import F1Proof
+from metrics.precision_proof import PrecisionProof
+from metrics.recall_proof import RecallProof
 
 
 class Metrics(BaseModel):
@@ -98,6 +101,9 @@ class Metrics(BaseModel):
     bleu_pe: MetricBase = BleuPE
     chrf: MetricBase = Chrf
     chrf_pp: MetricBase = ChrfPP
+    f1_proof: MetricBase = F1Proof
+    precision_proof: MetricBase = PrecisionProof
+    recall_proof: MetricBase = RecallProof
 
 
 def all_metrics() -> list[str]:

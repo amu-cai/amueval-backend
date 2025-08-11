@@ -30,7 +30,7 @@ class ChrfPP(MetricBase):
 
     def info(self) -> dict:
         return {
-            "name": "chrf",
+            "name": "chrf_pp",
             "link": "https://www.nltk.org/api/nltk.translate.bleu_score.html",
             "parameters": [
                 {
