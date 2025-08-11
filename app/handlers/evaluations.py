@@ -161,7 +161,7 @@ async def create_submission_handler(
     if len(expected_results) != len(submission_results):
         raise HTTPException(
             status_code=422,
-            detail="Submission file has different length than expected file",
+            detail=f"Submission file has different length {len(submission_results)} than expected file {len(expected_results)}",
         )
 
     submitter = await get_user(
