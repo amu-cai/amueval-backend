@@ -72,7 +72,7 @@ class F1Proof(MetricBase):
             refs = [json.loads(r.strip()) for r in references if r.strip()]
             hyps = [json.loads(h.strip()) for h in hypothesis if h.strip()]
 
-            results = compare_with_gold(references, hypothesis)
+            results = compare_with_gold(refs, hyps)
             metric_results = printing_results(results)
 
             return metric_results["f1"]*100
