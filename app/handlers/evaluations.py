@@ -142,11 +142,12 @@ async def create_submission_handler(
             )
 
     with open(f"{challenges_dir}/{challenge.title}.tsv", "r", encoding="utf-8-sig") as f:
-        expected_lines = f.readlines()
+        expected_lines = f.read().split("\n")
 
     await file.seek(0)
     contents = await file.read()
-    submission_lines = contents.decode("utf-8-sig").splitlines()
+    submission_lines = contents.decode("utf-8-sig").split("\n")
+    submission_lines = [line.rstrip("\r") for line in submission_lines if line.strip() != ""]
 
     def parse(lines):
         try:
