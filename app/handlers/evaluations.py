@@ -144,25 +144,26 @@ async def create_submission_handler(
     with open(f"{challenges_dir}/{challenge.title}.tsv", "r", encoding="utf-8-sig") as f:
         expected_lines = f.readlines()
 
-    # Read the uploaded file ONCE and with the same semantics as open(..., "r")
     await file.seek(0)
-    with io.TextIOWrapper(file.file, encoding="utf-8-sig", newline=None) as tf:
-        submission_lines = tf.readlines()
+    contents = await file.read()
+    submission_lines = contents.decode("utf-8-sig").splitlines()
 
-    # Now parse both — try floats first, fallback to strings — without re-reading
     def parse(lines):
         try:
             return [float(line) for line in lines]
         except ValueError:
             return [line.strip() for line in lines]
 
-    expected_results   = parse(expected_lines)
+    expected_results = parse(expected_lines)
     submission_results = parse(submission_lines)
 
     if len(expected_results) != len(submission_results):
         raise HTTPException(
             status_code=422,
-            detail=f"Submission file has different length {len(submission_results)} than expected file {len(expected_results)}",
+            detail=(
+                f"Submission file has a different number of lines ({len(submission_results)}) "
+                f"than expected ({len(expected_results)})"
+            ),
         )
 
     submitter = await get_user(
