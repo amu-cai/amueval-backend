@@ -47,6 +47,9 @@ from metrics.precision_gec_raw import PrecisionGECRaw
 from metrics.recall_gec import RecallGEC
 from metrics.recall_gec_raw import RecallGECRaw
 from metrics.bleu_pe import BleuPE
+from metrics.chrf import Chrf
+from metrics.chrf_pp import ChrfPP
+
 
 class Metrics(BaseModel):
     """All available metrics."""
@@ -93,6 +96,9 @@ class Metrics(BaseModel):
     recall_gec: MetricBase = RecallGEC
     recall_gec_raw: MetricBase = RecallGECRaw
     bleu_pe: MetricBase = BleuPE
+    chrf: MetricBase = Chrf
+    chrf_pp: MetricBase = ChrfPP
+
 
 def all_metrics() -> list[str]:
     """Show all available metrics."""
