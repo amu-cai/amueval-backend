@@ -69,13 +69,8 @@ class RecallProof(MetricBase):
         Value of the metric.
         """
         try:
-            refs = []
-            for r in references:
-                refs.append(json.loads(r.strip()))
-            
-            hyps = []
-            for h in hypothesis:
-                hyps.append(json.loads(h.strip()))
+            refs = [json.loads(r.strip()) for r in references if r.strip()]
+            hyps = [json.loads(h.strip()) for h in hypothesis if h.strip()]
 
             results = compare_with_gold(references, hypothesis)
             metric_results = printing_results(results)
