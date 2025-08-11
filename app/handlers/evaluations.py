@@ -1,5 +1,6 @@
 import json
 import os
+import io
 import asyncio
 
 from datetime import datetime
@@ -140,23 +141,23 @@ async def create_submission_handler(
                 detail="Submission after deadline",
             )
 
-    expected_file = open(
-        f"{challenges_dir}/{challenge.title}.tsv",
-        "r",
-    ).readlines()
+    with open(f"{challenges_dir}/{challenge.title}.tsv", "r", encoding="utf-8-sig") as f:
+        expected_lines = f.readlines()
 
-    try:
-        expected_results = [float(line) for line in expected_file]
+    # Read the uploaded file ONCE and with the same semantics as open(..., "r")
+    await file.seek(0)
+    with io.TextIOWrapper(file.file, encoding="utf-8-sig", newline=None) as tf:
+        submission_lines = tf.readlines()
 
-        submission_results = [
-            float(line) for line in (await file.read()).decode("utf-8").splitlines()
-        ]
-    except ValueError:
-        expected_results = [line.strip() for line in expected_file]
+    # Now parse both — try floats first, fallback to strings — without re-reading
+    def parse(lines):
+        try:
+            return [float(line) for line in lines]
+        except ValueError:
+            return [line.strip() for line in lines]
 
-        submission_results = [
-            line.strip() for line in (await file.read()).decode("utf-8").splitlines()
-        ]
+    expected_results   = parse(expected_lines)
+    submission_results = parse(submission_lines)
 
     if len(expected_results) != len(submission_results):
         raise HTTPException(
