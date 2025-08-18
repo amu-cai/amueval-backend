@@ -98,7 +98,11 @@ def printing_results(out_dc: dict):
         recall = 0.0
     else:
         recall = tp / (tp + fn)
-    fscore = (2 * precision * recall) / (precision + recall)
+
+    if precision + recall == 0.0:
+        fscore = 0.0
+    else:
+        fscore = (2 * precision * recall) / (precision + recall)
 
     return {'precision': precision, 'recall': recall, 'f1': fscore}
 

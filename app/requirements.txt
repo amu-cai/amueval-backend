@@ -38,3 +38,4 @@ en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_
 errant==3.0.0
 evaluate==0.4.3
 sacrebleu==2.5.1
+pycocotools==2.0.9
