@@ -1,5 +1,6 @@
 import json
 import os
+import io
 import asyncio
 
 from datetime import datetime
@@ -140,29 +141,34 @@ async def create_submission_handler(
                 detail="Submission after deadline",
             )
 
-    expected_file = open(
-        f"{challenges_dir}/{challenge.title}.tsv",
-        "r",
-    ).readlines()
-
-    try:
-        expected_results = [float(line) for line in expected_file]
-
-        submission_results = [
-            float(line) for line in (await file.read()).decode("utf-8").splitlines()
-        ]
-    except ValueError:
-        expected_results = [line.strip() for line in expected_file]
-
-        submission_results = [
-            line.strip() for line in (await file.read()).decode("utf-8").splitlines()
-        ]
+    with open(f"{challenges_dir}/{challenge.title}.tsv", "r", encoding="utf-8-sig") as f:
+        expected_lines = f.read().splitlines()
+    
+    await file.seek(0)
+    contents = await file.read()
+    submission_lines = contents.decode("utf-8-sig").splitlines()
+    
+    # Optional: filter out empty lines (if that's your intended behavior)
+    expected_lines = [line for line in expected_lines if line.strip() != ""]
+    submission_lines = [line for line in submission_lines if line.strip() != ""]
+    
+    def parse(lines):
+        try:
+            return [float(line) for line in lines]
+        except ValueError:
+            return [line.strip() for line in lines]
+    
+    expected_results = parse(expected_lines)
+    submission_results = parse(submission_lines)
 
     if len(expected_results) != len(submission_results):
         if "Layout Detection" not in challenge.title:
             raise HTTPException(
                 status_code=422,
-                detail="Submission file has different length than expected file",
+                detail=(
+                    f"Submission file has a different number of lines ({len(submission_results)}) "
+                    f"than expected ({len(expected_results)})"
+                ),
             )
 
     submitter = await get_user(

@@ -47,6 +47,14 @@ from metrics.precision_gec_raw import PrecisionGECRaw
 from metrics.recall_gec import RecallGEC
 from metrics.recall_gec_raw import RecallGECRaw
 from metrics.bleu_pe import BleuPE
+from metrics.chrf import Chrf
+from metrics.chrf_pp import ChrfPP
+from metrics.f1_proof import F1Proof
+from metrics.precision_proof import PrecisionProof
+from metrics.recall_proof import RecallProof
+from metrics.coco_ap import COCOAP
+from metrics.coco_ar import COCOAR
+
 
 class Metrics(BaseModel):
     """All available metrics."""
@@ -93,6 +101,14 @@ class Metrics(BaseModel):
     recall_gec: MetricBase = RecallGEC
     recall_gec_raw: MetricBase = RecallGECRaw
     bleu_pe: MetricBase = BleuPE
+    chrf: MetricBase = Chrf
+    chrf_pp: MetricBase = ChrfPP
+    f1_proof: MetricBase = F1Proof
+    precision_proof: MetricBase = PrecisionProof
+    recall_proof: MetricBase = RecallProof
+    coco_AP: MetricBase = COCOAP
+    coco_AR: MetricBase = COCOAR
+
 
 def all_metrics() -> list[str]:
     """Show all available metrics."""
@@ -179,3 +195,4 @@ def str2metric(str_metric: str) -> MetricBase:
             detail_info = f"Metric {metric_name} has the following params: {
                 metric_params} and you gave those: {params}"
             raise HTTPException(status_code=422, detail=detail_info)
+        
