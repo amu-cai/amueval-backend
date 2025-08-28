@@ -52,6 +52,8 @@ from metrics.chrf_pp import ChrfPP
 from metrics.f1_proof import F1Proof
 from metrics.precision_proof import PrecisionProof
 from metrics.recall_proof import RecallProof
+from metrics.coco_ap import COCOAP
+from metrics.coco_ar import COCOAR
 
 
 class Metrics(BaseModel):
@@ -104,6 +106,8 @@ class Metrics(BaseModel):
     f1_proof: MetricBase = F1Proof
     precision_proof: MetricBase = PrecisionProof
     recall_proof: MetricBase = RecallProof
+    coco_AP: MetricBase = COCOAP
+    coco_AR: MetricBase = COCOAR
 
 
 def all_metrics() -> list[str]:
