@@ -168,7 +168,6 @@ async def create_submission_handler(
                 detail=(
                     f"Submission file has a different number of lines ({len(submission_results)}) "
                     f"than expected ({len(expected_results)})"
-                    f"{challenge.title}"
                 ),
             )
 
