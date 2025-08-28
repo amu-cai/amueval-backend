@@ -159,10 +159,11 @@ async def create_submission_handler(
         ]
 
     if len(expected_results) != len(submission_results):
-        raise HTTPException(
-            status_code=422,
-            detail="Submission file has different length than expected file",
-        )
+        if "Layout Detection" not in challenge.title:
+            raise HTTPException(
+                status_code=422,
+                detail="Submission file has different length than expected file",
+            )
 
     submitter = await get_user(
         async_session=async_session,
