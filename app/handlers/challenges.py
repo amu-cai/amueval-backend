@@ -216,7 +216,11 @@ class CreateChallengeRerquest(BaseModel):
         if not any(v.startswith(url) for url in URLS_WHITELIST):
             raise HTTPException(
                 status_code=422,
-                detail=f"Source has to be from one of: {URLS_WHITELIST}"
+                detail=(
+                    "The dataset source must be a public URL from one of the approved platforms: "
+                    f"{', '.join(URLS_WHITELIST)}. "
+                    "Please host your dataset on one of these platforms to ensure proper access and reproducibility."
+                )
             )
         return v
 
