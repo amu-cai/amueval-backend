@@ -49,7 +49,7 @@ URLS_WHITELIST = [
     "https://bitbucket.org",
     "https://sourceforge.net",
     "https://www.kaggle.com",
-    "https://kaggle.com/
+    "https://kaggle.com/"
 ]
 
 FORBIDDEN_WORDS = [
