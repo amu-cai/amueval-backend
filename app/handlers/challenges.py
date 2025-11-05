@@ -218,7 +218,7 @@ class CreateChallengeResponse(BaseModel):
 
 class EditChallengeRequest(BaseModel):
     user: str
-    title: str = Field(max_length=30)
+    title: str = Field(max_length=70)
     description: str = Field(max_length=300)
     deadline: str
 
